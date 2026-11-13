@@ -1,3 +1,11 @@
+using SumaqAgro.Platform.Profiles.Application.QueryServices;
+using SumaqAgro.Platform.Profiles.Application.CommandServices;
+using SumaqAgro.Platform.Profiles.Application.Acl;
+using SumaqAgro.Platform.Profiles.Application.Internal.CommandServices;
+using SumaqAgro.Platform.Profiles.Application.Internal.QueryServices;
+using SumaqAgro.Platform.Profiles.Domain.Repositories;
+using SumaqAgro.Platform.Profiles.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
+using SumaqAgro.Platform.Profiles.Interfaces.Acl;
 using Cortex.Mediator.Commands;
 using SumaqAgro.Platform.Shared.Infrastructure.Interfaces.AspNetCore.Configuration;
 using SumaqAgro.Platform.Shared.Infrastructure.Interfaces.AspNetCore.OpenApi;
@@ -55,6 +63,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IHashingService, BCryptHashingService>();
 builder.Services.AddScoped<IUserCommandService, UserCommandService>();
 builder.Services.AddScoped<ISignInService, SignInService>();
+builder.Services.AddScoped<IProfilesRepository, ProfilesRepository>();
+builder.Services.AddScoped<IProfilesContextFacade, ProfilesContextFacade>();
+builder.Services.AddScoped<IProfilesCommandService, ProfilesCommandService>();
+builder.Services.AddScoped<IProfilesQueryService, ProfilesQueryService>();
 builder.Services.AddSingleton(TimeProvider.System);
 var configuredKey = builder.Configuration["Jwt:SigningKey"];
 var keyBytes = string.IsNullOrWhiteSpace(configuredKey) && builder.Environment.IsDevelopment()
