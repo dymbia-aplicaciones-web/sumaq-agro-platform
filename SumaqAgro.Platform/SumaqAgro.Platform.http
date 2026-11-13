@@ -1,0 +1,11 @@
+@host = http://localhost:5192
+
+### Documento OpenAPI
+GET {{host}}/openapi/v1.json
+Accept: application/json
+
+### Interfaz Scalar
+GET {{host}}/scalar/v1
+Accept: text/html
+
+
