@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="INVALID_CREDENTIALS" xml:space="preserve"><value>Correo o contraseña incorrectos.</value></data>
+  <data name="Email already exists" xml:space="preserve"><value>El correo ya está registrado.</value></data>
+</root>
