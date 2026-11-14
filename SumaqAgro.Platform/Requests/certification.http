@@ -1,0 +1,91 @@
+@host = http://localhost:5192
+
+# Ejecuta iam.http, crea una parcela en farming.http y una cooperativa con miembro en profiles.http.
+
+### Registrar lote de papa
+POST {{host}}/api/v1/harvest-batches
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "batchCode": "{{$uuid}}",
+  "cooperativeId": {{cooperativeId}},
+  "memberId": {{cooperativeMemberId}},
+  "plotId": {{fieldPlotId}},
+  "cropType": "ANDEAN_POTATO",
+  "harvestedOn": "2026-11-11"
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("harvestBatchId", response.body.id);
+  }
+%}
+
+### Consultar lote
+GET {{host}}/api/v1/harvest-batches/{{harvestBatchId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Pesar lote
+POST {{host}}/api/v1/harvest-batches/{{harvestBatchId}}/weight
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "grossWeightKg": 100, "tareKg": 5 }
+
+### Tomar muestra
+POST {{host}}/api/v1/harvest-batches/{{harvestBatchId}}/sample
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "sampleIdentifier": "MUESTRA-1", "sampleWeightKg": 2 }
+
+### Clasificar papa
+POST {{host}}/api/v1/harvest-batches/{{harvestBatchId}}/potato-calibers
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "firstPercentage": 60, "secondPercentage": 30, "thirdPercentage": 10, "pestDamagePercentage": 5 }
+
+### Emitir certificado
+POST {{host}}/api/v1/quality-certificates
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "certificateNumber": "{{$uuid}}", "harvestBatchId": {{harvestBatchId}}, "issuedByUserId": {{iamUserId}} }
+
+> {%
+  if (response.status === 201) {
+    client.global.set("certificateId", response.body.id);
+    client.global.set("certificateNumber", response.body.certificateNumber);
+    client.global.set("certificateHash", response.body.certificateHash);
+  }
+%}
+
+### Consultar certificado
+GET {{host}}/api/v1/quality-certificates?certificateNumber={{certificateNumber}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Verificar trazabilidad
+GET {{host}}/api/v1/public/traceability?number={{certificateNumber}}&hash={{certificateHash}}
+Accept: application/json
+
+### Revocar certificado
+POST {{host}}/api/v1/quality-certificates/{{certificateId}}/revocation
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Catar café. Registra, pesa y muestrea antes otro lote SPECIALTY_COFFEE
+POST {{host}}/api/v1/harvest-batches/{{harvestBatchId}}/coffee-cupping
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "aroma": 8, "flavor": 8, "acidity": 8, "body": 8, "totalScore": 85, "fermentDefect": false }
