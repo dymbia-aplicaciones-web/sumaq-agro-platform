@@ -1,6 +1,3 @@
-namespace SumaqAgro.Platform.Shared.Domain.Model.Errors;
+namespace SumaqAgro.Platform.Certification.Domain.Model.Queries;
 
-public class GetQualityCertificateByNumberQuery
-{
-    
-}
+public sealed record GetQualityCertificateByNumberQuery(string Number);
