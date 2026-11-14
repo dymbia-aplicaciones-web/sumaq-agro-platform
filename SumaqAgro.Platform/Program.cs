@@ -1,11 +1,4 @@
-using SumaqAgro.Platform.Profiles.Application.QueryServices;
-using SumaqAgro.Platform.Profiles.Application.CommandServices;
-using SumaqAgro.Platform.Profiles.Application.Acl;
-using SumaqAgro.Platform.Profiles.Application.Internal.CommandServices;
-using SumaqAgro.Platform.Profiles.Application.Internal.QueryServices;
-using SumaqAgro.Platform.Profiles.Domain.Repositories;
-using SumaqAgro.Platform.Profiles.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
-using SumaqAgro.Platform.Profiles.Interfaces.Acl;
+using SumaqAgro.Platform.Farming.Domain.Repositories;
 using Cortex.Mediator.Commands;
 using SumaqAgro.Platform.Shared.Infrastructure.Interfaces.AspNetCore.Configuration;
 using SumaqAgro.Platform.Shared.Infrastructure.Interfaces.AspNetCore.OpenApi;
@@ -13,7 +6,40 @@ using SumaqAgro.Platform.Shared.Infrastructure.Mediator.Cortex.Configuration;
 using SumaqAgro.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Interceptors;
 using SumaqAgro.Platform.Shared.Infrastructure.Pipeline.Middleware.Extensions;
 using SumaqAgro.Platform.Iam.Infrastructure.Hashing.BCrypt;
+using SumaqAgro.Platform.Subscriptions.Domain.Repositories;
+using SumaqAgro.Platform.Certification.Domain.Repositories;
+using SumaqAgro.Platform.Crop.Domain.Repositories;
+using SumaqAgro.Platform.Subscriptions.Application.Internal.QueryServices;
+using SumaqAgro.Platform.Subscriptions.Application.QueryServices;
+using SumaqAgro.Platform.Subscriptions.Application.CommandServices;
+using SumaqAgro.Platform.Certification.Application.Internal.QueryServices;
+using SumaqAgro.Platform.Certification.Application.QueryServices;
+using SumaqAgro.Platform.Certification.Application.CommandServices;
+using SumaqAgro.Platform.Crop.Application.Internal.QueryServices;
+using SumaqAgro.Platform.Crop.Application.QueryServices;
+using SumaqAgro.Platform.Crop.Application.CommandServices;
+using SumaqAgro.Platform.Farming.Application.Internal.QueryServices;
+using SumaqAgro.Platform.Farming.Application.QueryServices;
+using SumaqAgro.Platform.Farming.Application.CommandServices;
+using SumaqAgro.Platform.Profiles.Application.QueryServices;
+using SumaqAgro.Platform.Profiles.Application.CommandServices;
 using SumaqAgro.Platform.Iam.Application.CommandServices;
+using SumaqAgro.Platform.Certification.Application.Internal.CommandServices;
+using SumaqAgro.Platform.Certification.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
+using SumaqAgro.Platform.Subscriptions.Application.Internal.CommandServices;
+using SumaqAgro.Platform.Subscriptions.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
+using SumaqAgro.Platform.Crop.Application.Internal.CommandServices;
+using SumaqAgro.Platform.Crop.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
+using SumaqAgro.Platform.Farming.Application.Internal.CommandServices;
+using SumaqAgro.Platform.Farming.Application.Internal.OutboundServices;
+using SumaqAgro.Platform.Farming.Infrastructure.AgroMonitoring;
+using SumaqAgro.Platform.Farming.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
+using SumaqAgro.Platform.Profiles.Application.Acl;
+using SumaqAgro.Platform.Profiles.Application.Internal.CommandServices;
+using SumaqAgro.Platform.Profiles.Application.Internal.QueryServices;
+using SumaqAgro.Platform.Profiles.Domain.Repositories;
+using SumaqAgro.Platform.Profiles.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
+using SumaqAgro.Platform.Profiles.Interfaces.Acl;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -67,7 +93,23 @@ builder.Services.AddScoped<IProfilesRepository, ProfilesRepository>();
 builder.Services.AddScoped<IProfilesContextFacade, ProfilesContextFacade>();
 builder.Services.AddScoped<IProfilesCommandService, ProfilesCommandService>();
 builder.Services.AddScoped<IProfilesQueryService, ProfilesQueryService>();
+builder.Services.AddScoped<IFarmingRepository, FarmingRepository>();
+builder.Services.AddScoped<IFarmingCommandService, FarmingCommandService>();
+builder.Services.AddScoped<ICropRepository, CropRepository>();
+builder.Services.AddScoped<ICropCommandService, CropCommandService>();
+builder.Services.AddScoped<ICropMonitoringService, CropMonitoringService>();
+builder.Services.AddScoped<ICertificationRepository, CertificationRepository>();
+builder.Services.AddScoped<ICertificationService, CertificationService>();
+builder.Services.AddScoped<ISubscriptionsRepository, SubscriptionsRepository>();
+builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddHttpClient<IPolygonMonitoring, PolygonMonitoring>(client =>
+{
+    var baseUrl = builder.Configuration["AgroMonitoring:BaseUrl"] ?? "https://api.agromonitoring.com/agro/1.0/";
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+}).RemoveAllLoggers();
+
 var configuredKey = builder.Configuration["Jwt:SigningKey"];
 var keyBytes = string.IsNullOrWhiteSpace(configuredKey) && builder.Environment.IsDevelopment()
     ? RandomNumberGenerator.GetBytes(32)
@@ -96,10 +138,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 });
 builder.Services.AddAuthorization();
 
+builder.Services.AddScoped<IFarmingQueryService, FarmingQueryService>();
+
+builder.Services.AddScoped<ICropQueryService, CropQueryService>();
+
+builder.Services.AddScoped<ICertificationQueryService, CertificationQueryService>();
+builder.Services.AddScoped<ITraceabilityQueryService, TraceabilityQueryService>();
+
+builder.Services.AddScoped<ISubscriptionsQueryService, SubscriptionsQueryService>();
+
 var app = builder.Build();
 
 app.UseGlobalExceptionHandler();
 app.UseRequestLocalization(new RequestLocalizationOptions().SetDefaultCulture("en").AddSupportedCultures("en", "es").AddSupportedUICultures("en", "es"));
+
+if (app.Environment.IsDevelopment() &&
+    !string.IsNullOrWhiteSpace(app.Configuration.GetConnectionString("DefaultConnection")))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await database.Database.MigrateAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {
