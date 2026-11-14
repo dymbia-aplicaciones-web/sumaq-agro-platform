@@ -1,0 +1,39 @@
+@host = http://localhost:5192
+
+### Registrar un usuario de prueba
+POST {{host}}/api/v1/users
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "iam-rider-{{$uuid}}@sumaqagro.example",
+  "password": "PruebaLocal123!",
+  "roles": ["ROLE_FARMER"],
+  "profile": {
+    "firstName": "Ana",
+    "lastName": "Torres"
+  }
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("iamEmail", response.body.email);
+    client.global.set("iamUserId", response.body.id);
+  }
+%}
+
+### Iniciar sesión con el usuario de prueba registrado arriba
+POST {{host}}/api/v1/tokens
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "{{iamEmail}}",
+  "password": "PruebaLocal123!"
+}
+
+> {%
+  if (response.status === 200) {
+    client.global.set("iamToken", response.body.token);
+  }
+%}
