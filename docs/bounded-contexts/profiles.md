@@ -1,30 +1,30 @@
-# Perfiles y cooperativas
+# Profiles and Cooperatives
 
-Administra perfiles, cooperativas y la relación entre cooperativas y agrónomos. El dominio incluye `Profile`, `Cooperative`, `CooperativeMember`, `AgronomistInvitation` y `AgronomistAssignment`.
+Manages user profiles, cooperatives, and their relationships with agronomists. The model includes `Profile`, `Cooperative`, `CooperativeMember`, `AgronomistInvitation`, and `AgronomistAssignment`.
 
-## Reglas de negocio
+## Business rules
 
-El perfil inicial se crea a partir del registro de IAM y se consulta por ID de usuario. Los miembros y las invitaciones se agregan a una cooperativa existente. El dominio valida el DNI y el RUC mediante objetos de valor. Las asignaciones se pueden consultar por parcela o por cooperativa.
+IAM registration creates the initial profile, which can be retrieved by user ID. Memberships and invitations belong to an existing cooperative. Value objects validate Peruvian national ID (DNI) and taxpayer registration (RUC) numbers. Assignments can be queried by plot or cooperative.
 
 ## Endpoints
 
-| Método | Ruta | Operación |
+| Method | Route | Operation |
 | --- | --- | --- |
-| `GET` | `/api/v1/profiles/user/{userId}` | Consultar perfil |
-| `PUT` | `/api/v1/profiles/user/{userId}` | Actualizar perfil |
-| `POST` | `/api/v1/cooperatives` | Registrar cooperativa |
-| `POST` | `/api/v1/cooperatives/{cooperativeId}/members` | Agregar miembro |
-| `POST` | `/api/v1/cooperatives/{cooperativeId}/invitations` | Registrar invitación a un agrónomo |
-| `POST` | `/api/v1/agronomist-assignments` | Registrar asignación |
-| `GET` | `/api/v1/agronomist-assignments/plot/{plotId}` | Consultar asignación activa por parcela |
-| `GET` | `/api/v1/agronomist-assignments?cooperativeId={id}` | Listar asignaciones de una cooperativa |
+| `GET` | `/api/v1/profiles/user/{userId}` | Get a profile |
+| `PUT` | `/api/v1/profiles/user/{userId}` | Update a profile |
+| `POST` | `/api/v1/cooperatives` | Register a cooperative |
+| `POST` | `/api/v1/cooperatives/{cooperativeId}/members` | Add a member |
+| `POST` | `/api/v1/cooperatives/{cooperativeId}/invitations` | Record an agronomist invitation |
+| `POST` | `/api/v1/agronomist-assignments` | Create an assignment |
+| `GET` | `/api/v1/agronomist-assignments/plot/{plotId}` | Get the active assignment for a plot |
+| `GET` | `/api/v1/agronomist-assignments?cooperativeId={id}` | List assignments by cooperative |
 
-## Persistencia
+## Persistence
 
-Entity Framework Core administra en MySQL las tablas `profiles`, `cooperatives`, `cooperative_members`, `agronomist_invitations`, `agronomist_assignments`.
+Entity Framework Core manages these MySQL tables: `profiles`, `cooperatives`, `cooperative_members`, `agronomist_invitations`, `agronomist_assignments`.
 
-## Prueba local
+## Local testing
 
-Usa un JWT y el ID de un usuario registrado en IAM. Para los flujos de cooperativas y asignaciones, usa los IDs de los registros correspondientes.
+Use a JWT and the ID of a user registered through IAM. Use the corresponding record IDs to test cooperative and assignment workflows.
 
-Ejecuta las solicitudes de [profiles.http](../../SumaqAgro.Platform/Requests/profiles.http) desde Rider o usa [Scalar](http://localhost:5192/scalar/v1) con la API ejecutándose en el perfil local.
+Run the [profiles.http](../../SumaqAgro.Platform/Requests/profiles.http) requests in Rider or use [Scalar](http://localhost:5192/scalar/v1) while the API is running with the local launch profile.
