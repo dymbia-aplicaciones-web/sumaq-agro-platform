@@ -1,0 +1,3 @@
+namespace SumaqAgro.Platform.Certification.Interfaces.Rest.Resources;
+
+public sealed record HarvestBatchResource(long Id, string BatchCode, long CooperativeId, long MemberId, long PlotId, string CropType, DateOnly HarvestedOn, DateTimeOffset RegisteredAt, string Status, decimal? NetWeightKg, string? SampleIdentifier, decimal? SampleWeightKg, decimal? FirstCaliberPercentage, decimal? SecondCaliberPercentage, decimal? ThirdCaliberPercentage, decimal? PestDamagePercentage, decimal? CoffeeCuppingScore, bool CoffeeFermentDefect, decimal? QualityScore, string? QualityCategory);
