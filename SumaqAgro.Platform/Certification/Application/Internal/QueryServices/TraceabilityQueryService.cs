@@ -19,9 +19,10 @@ public sealed class TraceabilityQueryService(ICertificationQueryService certific
 
         var plot = await farming.FindPlotAsync(new GetFieldPlotByIdQuery(batch.PlotId), ct);
         var authentic = certificate.Status == "ACTIVE" &&
-                        string.Equals(certificate.CertificateHash, query.Hash.Value, StringComparison.OrdinalIgnoreCase);
+            string.Equals(certificate.CertificateHash, query.Hash.Value, StringComparison.OrdinalIgnoreCase);
         return Result<TraceabilityView>.Success(new TraceabilityView(certificate.CertificateNumber, certificate.Status,
             authentic, batch.BatchCode, batch.CropType, certificate.QualityCategory, batch.QualityScore,
             plot?.Name, plot?.Region, null));
     }
 }
+
