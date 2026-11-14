@@ -1,0 +1,167 @@
+@host = http://localhost:5192
+
+# Ejecuta iam.http y registra una parcela con farming.http.
+
+### Registrar reporte
+POST {{host}}/api/v1/pest-reports
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "plotId": {{fieldPlotId}},
+  "reporterId": {{iamUserId}},
+  "description": "Se observaron manchas en las hojas.",
+  "severity": "MEDIUM"
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("pestReportId", response.body.id);
+  }
+%}
+
+### Consultar reporte
+GET {{host}}/api/v1/pest-reports/{{pestReportId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Listar reportes por parcela
+GET {{host}}/api/v1/pest-reports?plotId={{fieldPlotId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Programar inspección para dentro de 30 segundos
+< {%
+  request.variables.set("scheduledAt", new Date(Date.now() + 30000).toISOString());
+%}
+POST {{host}}/api/v1/field-inspections
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "pestReportId": {{pestReportId}},
+  "agronomistId": {{iamUserId}},
+  "scheduledAt": "{{scheduledAt}}"
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("fieldInspectionId", response.body.id);
+  }
+%}
+
+### Consultar inspección
+GET {{host}}/api/v1/field-inspections/{{fieldInspectionId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Listar inspecciones por parcela
+GET {{host}}/api/v1/field-inspections?plotId={{fieldPlotId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Completar inspección después de la hora programada
+PATCH {{host}}/api/v1/field-inspections/{{fieldInspectionId}}/completion
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "findings": "Se verificaron manchas en las hojas." }
+
+### Emitir prescripción de prueba
+< {%
+  request.variables.set("applicationDate", new Date(Date.now() + 86400000).toISOString().slice(0, 10));
+%}
+POST {{host}}/api/v1/technical-prescriptions
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "pestReportId": {{pestReportId}},
+  "agronomistId": {{iamUserId}},
+  "product": "Producto de prueba",
+  "dosage": "Dosis de prueba",
+  "instructions": "Indicaciones de prueba",
+  "applicationDate": "{{applicationDate}}"
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("technicalPrescriptionId", response.body.id);
+  }
+%}
+
+### Consultar prescripción
+GET {{host}}/api/v1/technical-prescriptions/{{technicalPrescriptionId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Listar prescripciones por parcela
+GET {{host}}/api/v1/technical-prescriptions?plotId={{fieldPlotId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Registrar aplicación de la prescripción
+PATCH {{host}}/api/v1/technical-prescriptions/{{technicalPrescriptionId}}/application
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Publicar boletín
+POST {{host}}/api/v1/regional-bulletins
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "agronomistId": {{iamUserId}},
+  "region": "Cusco",
+  "title": "Boletín de prueba",
+  "content": "Contenido del boletín de prueba."
+}
+
+### Listar boletines por región
+GET {{host}}/api/v1/regional-bulletins?region=Cusco
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Listar observaciones satelitales
+GET {{host}}/api/v1/satellite-observations?plotId={{fieldPlotId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Listar pronósticos por región
+GET {{host}}/api/v1/climate-forecasts?region=Cusco
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Listar alertas por región
+GET {{host}}/api/v1/agroclimatic-alerts?region=Cusco
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Crear un reporte aparte para probar su eliminación
+POST {{host}}/api/v1/pest-reports
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "plotId": {{fieldPlotId}},
+  "reporterId": {{iamUserId}},
+  "description": "Se observaron manchas en las hojas.",
+  "severity": "MEDIUM"
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("deletablePestReportId", response.body.id);
+  }
+%}
+
+### Eliminar el reporte de prueba
+DELETE {{host}}/api/v1/pest-reports/{{deletablePestReportId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
