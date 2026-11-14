@@ -1,32 +1,32 @@
-# Certificación y trazabilidad
+# Certification and Traceability
 
-Gestiona `HarvestBatch` y `QualityCertificate`. El flujo registra lotes de papa andina o café de especialidad, evalúa su calidad y permite consultar su trazabilidad.
+Manages harvest batches (`HarvestBatch`) and quality certificates (`QualityCertificate`) for Andean potatoes and specialty coffee.
 
-## Reglas de negocio
+## Business rules
 
-Al registrar un lote se comprueba que el miembro pertenezca a la cooperativa. El lote se pesa y se muestrea antes de clasificar la papa por calibres o catar el café. La emisión valida el estado del lote y evita emitir un segundo certificado para el mismo lote. La verificación pública recibe el número y el hash del certificado.
+The member must belong to the cooperative before registering a batch. Weigh and sample the batch before grading potatoes by size or cupping coffee. A certificate can only be issued for an eligible batch, and each batch can have only one certificate. Public verification uses the certificate number and hash.
 
 ## Endpoints
 
-| Método | Ruta | Operación |
+| Method | Route | Operation |
 | --- | --- | --- |
-| `POST` | `/api/v1/harvest-batches` | Registrar lote |
-| `GET` | `/api/v1/harvest-batches/{harvestBatchId}` | Consultar lote |
-| `POST` | `/api/v1/harvest-batches/{harvestBatchId}/weight` | Registrar peso |
-| `POST` | `/api/v1/harvest-batches/{harvestBatchId}/sample` | Tomar muestra |
-| `POST` | `/api/v1/harvest-batches/{harvestBatchId}/potato-calibers` | Clasificar papa |
-| `POST` | `/api/v1/harvest-batches/{harvestBatchId}/coffee-cupping` | Registrar catación de café |
-| `POST` | `/api/v1/quality-certificates` | Emitir certificado |
-| `GET` | `/api/v1/quality-certificates?certificateNumber={number}` | Consultar certificado |
-| `POST` | `/api/v1/quality-certificates/{qualityCertificateId}/revocation` | Revocar certificado |
-| `GET` | `/api/v1/public/traceability?number={number}&hash={hash}` | Verificar trazabilidad pública |
+| `POST` | `/api/v1/harvest-batches` | Register a batch |
+| `GET` | `/api/v1/harvest-batches/{harvestBatchId}` | Get a batch |
+| `POST` | `/api/v1/harvest-batches/{harvestBatchId}/weight` | Record batch weight |
+| `POST` | `/api/v1/harvest-batches/{harvestBatchId}/sample` | Take a sample |
+| `POST` | `/api/v1/harvest-batches/{harvestBatchId}/potato-calibers` | Grade potatoes by size |
+| `POST` | `/api/v1/harvest-batches/{harvestBatchId}/coffee-cupping` | Record coffee cupping results |
+| `POST` | `/api/v1/quality-certificates` | Issue a certificate |
+| `GET` | `/api/v1/quality-certificates?certificateNumber={number}` | Get a certificate |
+| `POST` | `/api/v1/quality-certificates/{qualityCertificateId}/revocation` | Revoke a certificate |
+| `GET` | `/api/v1/public/traceability?number={number}&hash={hash}` | Verify public traceability |
 
-## Persistencia
+## Persistence
 
-Entity Framework Core administra en MySQL las tablas `harvest_batches`, `quality_certificates`.
+Entity Framework Core manages these MySQL tables: `harvest_batches`, `quality_certificates`.
 
-## Prueba local
+## Local testing
 
-Usa JWT para gestionar lotes y certificados. La verificación pública admite solicitudes sin JWT. Usa un lote por cada tipo de cultivo y conserva el número y el hash devueltos por la emisión.
+Use a JWT to manage batches and certificates. Public verification is anonymous. Use one batch per crop type and keep the certificate number and hash returned when you issue it.
 
-Ejecuta las solicitudes de [certification.http](../../SumaqAgro.Platform/Requests/certification.http) desde Rider o usa [Scalar](http://localhost:5192/scalar/v1) con la API ejecutándose en el perfil local.
+Run the [certification.http](../../SumaqAgro.Platform/Requests/certification.http) requests in Rider or use [Scalar](http://localhost:5192/scalar/v1) while the API is running with the local launch profile.

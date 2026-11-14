@@ -1,33 +1,33 @@
-# Parcelas y campañas agrícolas
+# Field Plots and Crop Campaigns
 
-Gestiona `FieldPlot` y `CropCampaign`, desde el registro de la parcela hasta el cierre de la campaña.
+Manages `FieldPlot` and `CropCampaign`, from plot registration to campaign closure.
 
-## Reglas de negocio
+## Business rules
 
-El registro valida que el nombre de parcela no esté repetido para el propietario y comprueba su cuota. Una parcela admite una campaña activa a la vez. Las campañas admiten papa andina (`ANDEAN_POTATO`) y café de especialidad (`SPECIALTY_COFFEE`). La delimitación valida el polígono e integra AgroMonitoring mediante `IPolygonMonitoring`.
+Plot names must be unique per owner, and registration checks the owner's plot quota. Each plot can have one active campaign at a time. Campaigns support Andean potatoes (`ANDEAN_POTATO`) and specialty coffee (`SPECIALTY_COFFEE`). Boundary updates validate the polygon and use `IPolygonMonitoring` to integrate with AgroMonitoring.
 
 ## Endpoints
 
-| Método | Ruta | Operación |
+| Method | Route | Operation |
 | --- | --- | --- |
-| `POST` | `/api/v1/field-plots` | Registrar parcela |
-| `GET` | `/api/v1/field-plots?ownerUserId={id}` | Listar parcelas por propietario |
-| `GET` | `/api/v1/field-plots/{fieldPlotId}` | Consultar parcela |
-| `PUT` | `/api/v1/field-plots/{fieldPlotId}/boundary` | Delimitar parcela |
-| `GET` | `/api/v1/field-plots/{fieldPlotId}/crop-campaigns` | Listar campañas de la parcela |
-| `POST` | `/api/v1/crop-campaigns` | Iniciar campaña |
-| `GET` | `/api/v1/crop-campaigns/{cropCampaignId}` | Consultar campaña |
-| `PUT` | `/api/v1/crop-campaigns/{cropCampaignId}/crop-type` | Cambiar cultivo |
-| `PUT` | `/api/v1/crop-campaigns/{cropCampaignId}/seed-variety` | Cambiar variedad de semilla |
-| `PUT` | `/api/v1/crop-campaigns/{cropCampaignId}/sowing-date` | Registrar fecha de siembra |
-| `POST` | `/api/v1/crop-campaigns/{cropCampaignId}/closures` | Cerrar campaña |
+| `POST` | `/api/v1/field-plots` | Register a plot |
+| `GET` | `/api/v1/field-plots?ownerUserId={id}` | List plots by owner |
+| `GET` | `/api/v1/field-plots/{fieldPlotId}` | Get a plot |
+| `PUT` | `/api/v1/field-plots/{fieldPlotId}/boundary` | Set the plot boundary |
+| `GET` | `/api/v1/field-plots/{fieldPlotId}/crop-campaigns` | List campaigns for a plot |
+| `POST` | `/api/v1/crop-campaigns` | Start a campaign |
+| `GET` | `/api/v1/crop-campaigns/{cropCampaignId}` | Get a campaign |
+| `PUT` | `/api/v1/crop-campaigns/{cropCampaignId}/crop-type` | Change the crop type |
+| `PUT` | `/api/v1/crop-campaigns/{cropCampaignId}/seed-variety` | Change the seed variety |
+| `PUT` | `/api/v1/crop-campaigns/{cropCampaignId}/sowing-date` | Record the sowing date |
+| `POST` | `/api/v1/crop-campaigns/{cropCampaignId}/closures` | Close a campaign |
 
-## Persistencia
+## Persistence
 
-Entity Framework Core administra en MySQL las tablas `field_plots`, `crop_campaigns`.
+Entity Framework Core manages these MySQL tables: `field_plots`, `crop_campaigns`.
 
-## Prueba local
+## Local testing
 
-Usa un JWT y registra una parcela antes de iniciar una campaña. Para probar la delimitación configura `AgroMonitoring:ApiKey` o `AGROMONITORING_API_KEY`.
+Use a JWT and register a plot before starting a campaign. To test boundary registration, configure `AgroMonitoring:ApiKey` or `AGROMONITORING_API_KEY`.
 
-Ejecuta las solicitudes de [farming.http](../../SumaqAgro.Platform/Requests/farming.http) desde Rider o usa [Scalar](http://localhost:5192/scalar/v1) con la API ejecutándose en el perfil local.
+Run the [farming.http](../../SumaqAgro.Platform/Requests/farming.http) requests in Rider or use [Scalar](http://localhost:5192/scalar/v1) while the API is running with the local launch profile.

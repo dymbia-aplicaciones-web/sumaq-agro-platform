@@ -1,25 +1,25 @@
-# Planes, suscripciones y pagos
+# Plans, Subscriptions, and Payments
 
-Administra el catálogo de planes, la suscripción del usuario autenticado y los intentos de pago de demostración. El modelo contiene `Plan`, `Subscription` y `Payment`.
+Manages the plan catalog, subscriptions for authenticated users, and simulated payment attempts. The model includes `Plan`, `Subscription`, and `Payment`.
 
-## Reglas de negocio
+## Business rules
 
-El plan `SEED` corresponde a `ROLE_FARMER`, `COOPERATIVE_PRO` a `ROLE_COOPERATIVE_DIRECTOR` y `TECHNICAL_ADVISOR` a `ROLE_AGRONOMIST`. El checkout usa el ciclo mensual o anual para calcular el importe. Un pago simulado `COMPLETED` crea la suscripción. El pago rechazado se guarda como intento y permite reintentar. El checkout impide contratar si el usuario ya tiene una suscripción registrada.
+`SEED` is available to `ROLE_FARMER`, `COOPERATIVE_PRO` to `ROLE_COOPERATIVE_DIRECTOR`, and `TECHNICAL_ADVISOR` to `ROLE_AGRONOMIST`. Checkout calculates the amount using the monthly or annual billing cycle. A simulated `COMPLETED` payment creates the subscription. A declined payment is recorded and can be retried. Users with an existing subscription cannot check out again.
 
 ## Endpoints
 
-| Método | Ruta | Operación |
+| Method | Route | Operation |
 | --- | --- | --- |
-| `GET` | `/api/v1/plans` | Listar planes |
-| `GET` | `/api/v1/subscriptions/me` | Consultar la suscripción del usuario autenticado |
-| `POST` | `/api/v1/subscriptions/me/checkout` | Simular el pago de un plan |
+| `GET` | `/api/v1/plans` | List plans |
+| `GET` | `/api/v1/subscriptions/me` | Get the authenticated user's subscription |
+| `POST` | `/api/v1/subscriptions/me/checkout` | Simulate payment for a plan |
 
-## Persistencia
+## Persistence
 
-Entity Framework Core administra en MySQL las tablas `plans`, `subscriptions`, `payments`.
+Entity Framework Core manages these MySQL tables: `plans`, `subscriptions`, `payments`.
 
-## Prueba local
+## Local testing
 
-Usa un JWT con el rol del plan. Prueba primero el pago rechazado, luego el aprobado y consulta `/api/v1/subscriptions/me`. Los planes iniciales se insertan mediante una migración.
+Use a JWT with the role required by your plan. Test a declined payment first, then an approved payment, and check `/api/v1/subscriptions/me`. The initial plans are seeded by a migration.
 
-Ejecuta las solicitudes de [subscriptions.http](../../SumaqAgro.Platform/Requests/subscriptions.http) desde Rider o usa [Scalar](http://localhost:5192/scalar/v1) con la API ejecutándose en el perfil local.
+Run the [subscriptions.http](../../SumaqAgro.Platform/Requests/subscriptions.http) requests in Rider or use [Scalar](http://localhost:5192/scalar/v1) while the API is running with the local launch profile.
