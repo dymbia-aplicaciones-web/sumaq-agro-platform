@@ -1,24 +1,24 @@
-# Identidad y acceso
+# Identity and Access Management
 
-Administra el registro de usuarios y el inicio de sesión. `User` representa la cuenta y `EmailAddress` valida el correo.
+Handles user registration and sign-in. `User` represents an account and `EmailAddress` validates its email address.
 
-## Reglas de negocio
+## Business rules
 
-El registro recibe correo, contraseña, un rol y datos básicos del perfil. Se admiten `ROLE_FARMER`, `ROLE_COOPERATIVE_DIRECTOR` y `ROLE_AGRONOMIST`. El correo debe ser único. La contraseña se almacena como hash BCrypt. `UserRegisteredEvent` activa la creación del perfil inicial mediante la fachada de Profiles. El inicio de sesión valida las credenciales y devuelve un JWT.
+Registration accepts an email address, a password, one role, and basic profile details. Supported roles are `ROLE_FARMER`, `ROLE_COOPERATIVE_DIRECTOR`, and `ROLE_AGRONOMIST`. Email addresses must be unique. Passwords are stored as BCrypt hashes. `UserRegisteredEvent` triggers profile creation through the Profiles facade. Signing in validates credentials and returns a JWT.
 
 ## Endpoints
 
-| Método | Ruta | Operación |
+| Method | Route | Operation |
 | --- | --- | --- |
-| `POST` | `/api/v1/users` | Registrar usuario y devolver `201 Created` |
-| `POST` | `/api/v1/tokens` | Iniciar sesión y obtener el JWT |
+| `POST` | `/api/v1/users` | Register a user and return `201 Created` |
+| `POST` | `/api/v1/tokens` | Sign in and obtain a JWT |
 
-## Persistencia
+## Persistence
 
-Entity Framework Core administra en MySQL las tablas `users`.
+Entity Framework Core manages these MySQL tables: `users`.
 
-## Prueba local
+## Local testing
 
-Ambas rutas son públicas. Registra una cuenta con un correo nuevo e inicia sesión con las mismas credenciales. Usa el JWT para probar las rutas protegidas de los otros bounded.
+Both routes are public. Register with a new email address, sign in with the same credentials, and use the JWT to test protected endpoints.
 
-Ejecuta las solicitudes de [iam.http](../../SumaqAgro.Platform/Requests/iam.http) desde Rider o usa [Scalar](http://localhost:5192/scalar/v1) con la API ejecutándose en el perfil local.
+Run the [iam.http](../../SumaqAgro.Platform/Requests/iam.http) requests in Rider or use [Scalar](http://localhost:5192/scalar/v1) while the API is running with the local launch profile.
