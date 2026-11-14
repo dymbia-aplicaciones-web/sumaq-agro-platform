@@ -1,0 +1,99 @@
+@host = http://localhost:5192
+
+# Ejecuta primero el registro y el inicio de sesión de iam.http.
+
+### Consultar perfil
+GET {{host}}/api/v1/profiles/user/{{iamUserId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Actualizar perfil
+PUT {{host}}/api/v1/profiles/user/{{iamUserId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "firstName": "Ana",
+  "lastName": "Torres",
+  "phoneNumber": "987654321",
+  "photoUrl": null,
+  "preferredLanguage": "ES"
+}
+
+### Registrar cooperativa
+POST {{host}}/api/v1/cooperatives
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "ruc": "{{$random.integer(10000000000, 99999999999)}}",
+  "businessName": "Cooperativa Sumaq",
+  "region": "Cusco",
+  "managerUserId": {{iamUserId}}
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("cooperativeId", response.body.id);
+  }
+%}
+
+### Agregar miembro
+POST {{host}}/api/v1/cooperatives/{{cooperativeId}}/members
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "dni": "12345678",
+  "firstName": "María",
+  "lastName": "Quispe",
+  "community": "Cusco",
+  "joinedAt": "2026-11-11"
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("cooperativeMemberId", response.body.id);
+  }
+%}
+
+### Invitar agrónomo
+POST {{host}}/api/v1/cooperatives/{{cooperativeId}}/invitations
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "agronomo@sumaqagro.example"
+}
+
+### Asignar agrónomo
+POST {{host}}/api/v1/agronomist-assignments
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "cooperativeId": {{cooperativeId}},
+  "agronomistUserId": {{iamUserId}},
+  "plotId": {{$random.integer(1000000, 999999999)}}
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("profilePlotId", response.body.plotId);
+  }
+%}
+
+### Consultar asignación por parcela
+GET {{host}}/api/v1/agronomist-assignments/plot/{{profilePlotId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Listar asignaciones de la cooperativa
+GET {{host}}/api/v1/agronomist-assignments?cooperativeId={{cooperativeId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json

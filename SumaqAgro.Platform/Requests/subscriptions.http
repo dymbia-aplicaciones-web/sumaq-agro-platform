@@ -1,0 +1,29 @@
+@host = http://localhost:5192
+
+# Ejecuta iam.http con una cuenta ROLE_FARMER antes de probar el plan SEED.
+
+### Listar planes
+GET {{host}}/api/v1/plans
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Consultar mi suscripción
+GET {{host}}/api/v1/subscriptions/me
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Simular un pago rechazado
+POST {{host}}/api/v1/subscriptions/me/checkout
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "planCode": "SEED", "billingCycle": "MONTHLY", "simulatedOutcome": "REJECTED" }
+
+### Simular un pago aprobado
+POST {{host}}/api/v1/subscriptions/me/checkout
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "planCode": "SEED", "billingCycle": "MONTHLY", "simulatedOutcome": "COMPLETED" }

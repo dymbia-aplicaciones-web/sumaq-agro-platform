@@ -1,0 +1,109 @@
+@host = http://localhost:5192
+
+# Ejecuta primero el registro y el inicio de sesión de iam.http.
+
+### Registrar parcela
+POST {{host}}/api/v1/field-plots
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "ownerUserId": {{iamUserId}},
+  "name": "Parcela {{$uuid}}",
+  "region": "Cusco",
+  "areaHectares": 2.3
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("fieldPlotId", response.body.id);
+  }
+%}
+
+### Consultar parcela
+GET {{host}}/api/v1/field-plots/{{fieldPlotId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Listar parcelas del usuario
+GET {{host}}/api/v1/field-plots?ownerUserId={{iamUserId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Delimitar parcela
+PUT {{host}}/api/v1/field-plots/{{fieldPlotId}}/boundary
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "vertices": [
+    { "latitude": -13.500, "longitude": -71.900 },
+    { "latitude": -13.500, "longitude": -71.898 },
+    { "latitude": -13.498, "longitude": -71.898 },
+    { "latitude": -13.498, "longitude": -71.900 }
+  ]
+}
+
+### Iniciar campaña
+POST {{host}}/api/v1/crop-campaigns
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "fieldPlotId": {{fieldPlotId}},
+  "season": "2026-II",
+  "cropType": "ANDEAN_POTATO",
+  "seedVariety": "Canchan",
+  "customSeedVariety": false
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("cropCampaignId", response.body.id);
+  }
+%}
+
+### Consultar campaña
+GET {{host}}/api/v1/crop-campaigns/{{cropCampaignId}}
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Cambiar cultivo
+PUT {{host}}/api/v1/crop-campaigns/{{cropCampaignId}}/crop-type
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "cropType": "SPECIALTY_COFFEE" }
+
+### Cambiar semilla
+PUT {{host}}/api/v1/crop-campaigns/{{cropCampaignId}}/seed-variety
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "seedVariety": "Bourbon", "customSeedVariety": true }
+
+### Registrar fecha de siembra
+< {%
+  request.variables.set("sowingDate", new Date().toISOString().slice(0, 10));
+%}
+PUT {{host}}/api/v1/crop-campaigns/{{cropCampaignId}}/sowing-date
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "sowingDate": "{{sowingDate}}" }
+
+### Listar campañas de la parcela
+GET {{host}}/api/v1/field-plots/{{fieldPlotId}}/crop-campaigns
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Cerrar campaña
+POST {{host}}/api/v1/crop-campaigns/{{cropCampaignId}}/closures
+Authorization: Bearer {{iamToken}}
+Accept: application/json
