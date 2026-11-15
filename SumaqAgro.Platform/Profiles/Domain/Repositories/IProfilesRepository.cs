@@ -15,6 +15,7 @@ public interface IProfilesRepository
     Task<Profile?> FindProfileAsync(long userId, CancellationToken cancellationToken);
     Task<bool> CooperativeExistsAsync(long id, CancellationToken cancellationToken);
     void AddCooperative(Cooperative cooperative);
+    Task<bool> MemberBelongsAsync(long cooperativeId, long memberId, CancellationToken ct);
     void AddMember(CooperativeMember member);
     void AddInvitation(AgronomistInvitation invitation);
     Task<AgronomistAssignment?> FindAssignmentAsync(long id, CancellationToken ct);
