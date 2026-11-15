@@ -165,3 +165,14 @@ Content-Type: application/json
 DELETE {{host}}/api/v1/pest-reports/{{deletablePestReportId}}
 Authorization: Bearer {{iamToken}}
 Accept: application/json
+
+### Import the latest satellite observation for an owned, linked plot
+POST {{host}}/api/v1/satellite-observations/import
+Authorization: Bearer {{iamToken}}
+Content-Type: application/json
+
+{
+  "plotId": {{fieldPlotId}},
+  "start": "2026-11-01T00:00:00Z",
+  "end": "2026-11-10T00:00:00Z"
+}
