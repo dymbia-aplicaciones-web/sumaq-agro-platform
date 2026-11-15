@@ -29,6 +29,11 @@ public sealed class QualityCertificatesController(ICertificationService commands
     public async Task<IActionResult> Get([FromQuery, Required] string certificateNumber, CancellationToken ct) =>
         Found((await repository.FindCertificateAsync(new GetQualityCertificateByNumberQuery(certificateNumber.Trim()), ct)) is { } model ? CertificationResourceAssembler.ToResource(model) : null, "QualityCertificate");
 
+    [HttpGet("batch/{batchId:long}")]
+    public async Task<IActionResult> GetByBatch(long batchId, CancellationToken ct) =>
+        Found((await repository.FindCertificateByBatchAsync(batchId, ct)) is { } certificate
+            ? CertificationResourceAssembler.ToResource(certificate) : null, "QualityCertificate");
+
     [HttpGet("{qualityCertificateId:long}/document")]
     [Produces("application/pdf")]
     [ProducesResponseType(StatusCodes.Status200OK)]
