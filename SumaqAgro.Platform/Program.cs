@@ -1,3 +1,16 @@
+using SumaqAgro.Platform.Iam.Interfaces.Acl;
+using SumaqAgro.Platform.Iam.Application.Acl;
+using SumaqAgro.Platform.Iam.Infrastructure.Acl;
+using SumaqAgro.Platform.Subscriptions.Application.Internal.OutboundServices;
+using SumaqAgro.Platform.Subscriptions.Infrastructure.Acl;
+using SumaqAgro.Platform.Certification.Application.Internal.OutboundServices;
+using SumaqAgro.Platform.Certification.Infrastructure.Acl;
+using SumaqAgro.Platform.Farming.Application.Acl;
+using SumaqAgro.Platform.Farming.Interfaces.Acl;
+using SumaqAgro.Platform.Profiles.Application.Internal.OutboundServices;
+using SumaqAgro.Platform.Profiles.Infrastructure.Acl;
+using SumaqAgro.Platform.Subscriptions.Application.Acl;
+using SumaqAgro.Platform.Subscriptions.Interfaces.Acl;
 using SumaqAgro.Platform.Iam.Infrastructure.Email;
 using SumaqAgro.Platform.Farming.Domain.Repositories;
 using Cortex.Mediator.Commands;
@@ -35,7 +48,7 @@ using SumaqAgro.Platform.Crop.Application.Internal.CommandServices;
 using SumaqAgro.Platform.Crop.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using SumaqAgro.Platform.Farming.Application.Internal.CommandServices;
 using SumaqAgro.Platform.Farming.Application.Internal.OutboundServices;
-using SumaqAgro.Platform.Farming.Infrastructure.AgroMonitoring;
+using SumaqAgro.Platform.Farming.Infrastructure.Acl;
 using SumaqAgro.Platform.Farming.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using SumaqAgro.Platform.Profiles.Application.Acl;
 using SumaqAgro.Platform.Profiles.Application.Internal.CommandServices;
@@ -90,6 +103,11 @@ builder.Services.AddDbContext<AppDbContext>((services, options) =>
 });
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IIamAccounts, IamAccounts>();
+builder.Services.AddScoped<IInitialProfiles, InitialProfiles>();
+builder.Services.AddScoped<ISubscriptionAccounts, SubscriptionAccounts>();
+builder.Services.AddScoped<ICropAccounts, CropAccounts>();
+builder.Services.AddScoped<ICooperativeMembership, CooperativeMembership>();
 builder.Services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
 builder.Services.AddScoped<IPasswordRecoveryService, PasswordRecoveryService>();
 builder.Services.AddHttpClient<IPasswordResetEmail, BrevoPasswordResetEmail>(client =>
@@ -118,6 +136,8 @@ builder.Services.AddScoped<ICertificationRepository, CertificationRepository>();
 builder.Services.AddScoped<ICertificationService, CertificationService>();
 builder.Services.AddSingleton<CertificatePdf>();
 builder.Services.AddScoped<ISubscriptionsRepository, SubscriptionsRepository>();
+builder.Services.AddScoped<IAdvisorSubscriptionFacade, AdvisorSubscriptionFacade>();
+builder.Services.AddScoped<IAdvisorPlotQuota, AdvisorPlotQuota>();
 builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHttpClient<IPolygonMonitoring, PolygonMonitoring>(client =>
@@ -156,6 +176,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IFarmingQueryService, FarmingQueryService>();
+builder.Services.AddScoped<IFieldPlotFacade, FieldPlotFacade>();
+builder.Services.AddScoped<IMonitoringPlots, FarmingMonitoringPlots>();
+builder.Services.AddScoped<ITraceabilityPlots, FarmingTraceabilityPlots>();
 
 builder.Services.AddScoped<ICropQueryService, CropQueryService>();
 

@@ -1,15 +1,7 @@
-using SumaqAgro.Platform.Iam.Domain.Model.Aggregates;
-
 namespace SumaqAgro.Platform.Profiles.Domain.Model.Aggregates;
 
 public sealed class Profile(long userId, string firstName, string lastName)
 {
-    internal Profile(User user, string firstName, string lastName) : this(0, firstName, lastName)
-    {
-        User = user;
-    }
-
-    public User? User { get; private set; }
     public long Id { get; private set; }
     public long UserId { get; private set; } = userId;
     public string FirstName { get; private set; } = firstName.Trim();

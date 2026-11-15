@@ -11,7 +11,7 @@ public sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
     public void Configure(EntityTypeBuilder<Profile> builder)
     {
         builder.HasIndex(profile => profile.UserId).IsUnique();
-        builder.HasOne(profile => profile.User).WithOne().HasForeignKey<Profile>(profile => profile.UserId);
+        builder.HasOne<User>().WithOne().HasForeignKey<Profile>(profile => profile.UserId);
         builder.Property(profile => profile.FirstName).HasMaxLength(100);
         builder.Property(profile => profile.LastName).HasMaxLength(100);
         builder.Property(profile => profile.PhoneNumber).HasMaxLength(15);

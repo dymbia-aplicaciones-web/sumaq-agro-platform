@@ -5,7 +5,7 @@ using SumaqAgro.Platform.Profiles.Domain.Model.Errors;
 using SumaqAgro.Platform.Shared.Domain.Model.Errors;
 using SumaqAgro.Platform.Profiles.Application.CommandServices;
 using Microsoft.EntityFrameworkCore;
-using SumaqAgro.Platform.Subscriptions.Domain.Repositories;
+using SumaqAgro.Platform.Profiles.Application.Internal.OutboundServices;
 using MySql.Data.MySqlClient;
 using SumaqAgro.Platform.Profiles.Domain.Model.Aggregates;
 using SumaqAgro.Platform.Profiles.Domain.Model.Entities;
@@ -14,7 +14,7 @@ using SumaqAgro.Platform.Shared.Domain.Repositories;
 
 namespace SumaqAgro.Platform.Profiles.Application.Internal.CommandServices;
 
-public sealed class ProfilesCommandService(IProfilesRepository profiles, IUnitOfWork unitOfWork, ISubscriptionsRepository subscriptions, TimeProvider clock) : IProfilesCommandService
+public sealed class ProfilesCommandService(IProfilesRepository profiles, IUnitOfWork unitOfWork, IAdvisorPlotQuota advisorQuota, TimeProvider clock) : IProfilesCommandService
 {
     public async Task<Result<Profile>> UpdateAsync(UpdateProfileCommand command, CancellationToken cancellationToken)
     {
@@ -69,7 +69,7 @@ public sealed class ProfilesCommandService(IProfilesRepository profiles, IUnitOf
 
     public async Task<Result<AgronomistAssignment>> AssignAsync(AssignAgronomistCommand command, CancellationToken ct)
     {
-        await using var transaction = await subscriptions.BeginAccountUpdateAsync(command.AgronomistUserId, ct);
+        await using var transaction = await advisorQuota.LockAccountAsync(command.AgronomistUserId, ct);
         if (await CheckQuotaAsync(command.AgronomistUserId, ct) is { } error)
             return Result<AgronomistAssignment>.Failure(error);
 
@@ -81,7 +81,7 @@ public sealed class ProfilesCommandService(IProfilesRepository profiles, IUnitOf
 
     public async Task<Result<AgronomistAssignment>> ReassignAsync(long id, long userId, CancellationToken ct)
     {
-        await using var transaction = await subscriptions.BeginAccountUpdateAsync(userId, ct);
+        await using var transaction = await advisorQuota.LockAccountAsync(userId, ct);
         var assignment = await profiles.FindAssignmentAsync(id, ct);
         if (assignment is null)
             return Result<AgronomistAssignment>.Failure(Error.NotFound("Assignment", "Assignment not found."));
@@ -107,13 +107,11 @@ public sealed class ProfilesCommandService(IProfilesRepository profiles, IUnitOf
 
     private async Task<Error?> CheckQuotaAsync(long userId, CancellationToken ct)
     {
-        var subscription = await subscriptions.FindSubscriptionAsync(userId, ct);
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(clock.GetUtcNow(), "America/Lima").DateTime);
-        if (subscription is not { PlanCode: "TECHNICAL_ADVISOR" } || today < subscription.StartDate || today > subscription.EndDate)
+        var limit = await advisorQuota.GetCurrentPlotLimitAsync(userId, ct);
+        if (limit is null)
             return Error.Forbidden("AdvisorPlanRequired", "A current Technical Advisor subscription is required.");
 
-        var plan = await subscriptions.FindPlanAsync(subscription.PlanCode, ct);
-        if (plan is null || await profiles.CountActiveAssignmentsAsync(userId, ct) >= plan.SupervisedPlotLimit)
+        if (await profiles.CountActiveAssignmentsAsync(userId, ct) >= limit.Value)
             return Error.Conflict("AdvisorPlotQuota", "The agronomist has reached the active plot assignment limit.");
         return null;
     }

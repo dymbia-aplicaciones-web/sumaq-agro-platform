@@ -1,6 +1,7 @@
 using SumaqAgro.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using SumaqAgro.Platform.Iam.Domain.Model.ValueObjects;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SumaqAgro.Platform.Iam.Domain.Model.Aggregates;
 using SumaqAgro.Platform.Iam.Domain.Repositories;
 using SumaqAgro.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
@@ -11,6 +12,15 @@ public sealed class UserRepository(AppDbContext context) : BaseRepository<User>(
 {
     public Task<User?> FindByEmailAsync(EmailAddress email, CancellationToken cancellationToken) =>
         Context.Set<User>().AsNoTracking().SingleOrDefaultAsync(user => user.Email == email.Value, cancellationToken);
+
+    public async Task<IUserRegistrationTransaction> BeginRegistrationAsync(CancellationToken ct) =>
+        new RegistrationTransaction(await Context.Database.BeginTransactionAsync(ct));
+
+    private sealed class RegistrationTransaction(IDbContextTransaction transaction) : IUserRegistrationTransaction
+    {
+        public Task CommitAsync(CancellationToken ct) => transaction.CommitAsync(ct);
+        public ValueTask DisposeAsync() => transaction.DisposeAsync();
+    }
 
     public void Detach(User user) => Context.Entry(user).State = EntityState.Detached;
 }

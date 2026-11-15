@@ -4,7 +4,7 @@ using SumaqAgro.Platform.Farming.Application.Internal.OutboundServices;
 using SumaqAgro.Platform.Farming.Domain.Model.Aggregates;
 using SumaqAgro.Platform.Farming.Domain.Model.ValueObjects;
 
-namespace SumaqAgro.Platform.Farming.Infrastructure.AgroMonitoring;
+namespace SumaqAgro.Platform.Farming.Infrastructure.Acl;
 
 public sealed class PolygonMonitoring(HttpClient client, IConfiguration configuration, ILogger<PolygonMonitoring> logger)
     : IPolygonMonitoring

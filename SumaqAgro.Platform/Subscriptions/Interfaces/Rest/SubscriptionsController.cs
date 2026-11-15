@@ -2,14 +2,12 @@ using SumaqAgro.Platform.Subscriptions.Domain.Model.Commands;
 using SumaqAgro.Platform.Subscriptions.Domain.Model.Queries;
 using SumaqAgro.Platform.Subscriptions.Interfaces.Rest.Transform;
 using SumaqAgro.Platform.Shared.Application.Model;
-using SumaqAgro.Platform.Iam.Domain.Model.ValueObjects;
 using SumaqAgro.Platform.Subscriptions.Interfaces.Rest.Resources;
 using SumaqAgro.Platform.Shared.Domain.Model.Errors;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Mvc;
-using SumaqAgro.Platform.Iam.Domain.Model.Aggregates;
-using SumaqAgro.Platform.Iam.Domain.Repositories;
+using SumaqAgro.Platform.Subscriptions.Application.Internal.OutboundServices;
 using SumaqAgro.Platform.Shared.Interfaces.Rest;
 using SumaqAgro.Platform.Shared.Interfaces.Rest.ProblemDetails;
 using SumaqAgro.Platform.Subscriptions.Application.CommandServices;
@@ -22,7 +20,7 @@ namespace SumaqAgro.Platform.Subscriptions.Interfaces.Rest;
 [ApiController]
 [Route("api/v1/subscriptions/me")]
 public sealed class SubscriptionsController(ISubscriptionsQueryService repository, ICheckoutService checkout,
-    IUserRepository users, IConfiguration configuration, IWebHostEnvironment environment, ProblemDetailsFactory problems)
+    ISubscriptionAccounts users, IConfiguration configuration, IWebHostEnvironment environment, ProblemDetailsFactory problems)
     : ResultController(problems)
 {
     [HttpGet]
@@ -74,8 +72,8 @@ public sealed class SubscriptionsController(ISubscriptionsQueryService repositor
         return result.DomainError.Type == EErrorType.Forbidden ? Forbid() : Respond(result.Match(payment => Result<PaymentResource>.Success(SubscriptionResourceAssembler.ToResource(payment)), Result<PaymentResource>.Failure), 201);
     }
 
-    private Task<User?> CurrentUserAsync(CancellationToken ct) =>
+    private Task<SubscriptionAccount?> CurrentUserAsync(CancellationToken ct) =>
         User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value is { Length: > 0 } email
-            ? users.FindByEmailAsync(new EmailAddress(email), ct)
-            : Task.FromResult<User?>(null);
+            ? users.FindAsync(email, ct)
+            : Task.FromResult<SubscriptionAccount?>(null);
 }

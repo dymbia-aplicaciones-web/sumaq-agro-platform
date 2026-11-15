@@ -32,6 +32,9 @@ public sealed class ProfilesRepository(AppDbContext context) : IProfilesReposito
 
     public void AddProfile(Profile profile) => context.Add(profile);
     public void AddCooperative(Cooperative cooperative) => context.Add(cooperative);
+    public Task<bool> MemberBelongsAsync(long cooperativeId, long memberId, CancellationToken ct) =>
+        context.Set<CooperativeMember>().AnyAsync(member => member.Id == memberId && member.CooperativeId == cooperativeId, ct);
+
     public void AddMember(CooperativeMember member) => context.Add(member);
     public void AddInvitation(AgronomistInvitation invitation) => context.Add(invitation);
     public Task<AgronomistAssignment?> FindAssignmentAsync(long id, CancellationToken ct) =>
