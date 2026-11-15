@@ -35,6 +35,7 @@ public sealed class CooperativeMemberConfiguration : IEntityTypeConfiguration<Co
     public void Configure(EntityTypeBuilder<CooperativeMember> builder)
     {
         builder.HasOne<Cooperative>().WithMany().HasForeignKey(member => member.CooperativeId);
+        builder.HasIndex(member => member.UserId);
         builder.HasIndex(member => new { member.CooperativeId, member.Dni }).IsUnique();
         builder.Property(member => member.Dni).HasMaxLength(8);
         builder.Property(member => member.FirstName).HasMaxLength(100);
@@ -61,5 +62,13 @@ public sealed class AgronomistAssignmentConfiguration : IEntityTypeConfiguration
             "CASE WHEN active THEN plot_id ELSE NULL END", stored: true);
         builder.HasIndex("ActivePlotId").IsUnique();
         builder.HasIndex(assignment => assignment.CooperativeId);
+        builder.Property(assignment => assignment.AgronomistUserId).IsConcurrencyToken();
+        builder.OwnsMany(assignment => assignment.History, history =>
+        {
+            history.ToTable("assignment_history");
+            history.WithOwner().HasForeignKey("AssignmentId");
+            history.Property<long>("Id").ValueGeneratedOnAdd();
+            history.HasKey("Id");
+        });
     }
 }

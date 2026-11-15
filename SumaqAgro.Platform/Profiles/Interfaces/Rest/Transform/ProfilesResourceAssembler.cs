@@ -15,7 +15,7 @@ internal static class ProfilesResourceAssembler
         new(new Ruc(resource.Ruc), resource.BusinessName, resource.Region, resource.ManagerUserId);
 
     public static AddCooperativeMemberCommand ToCommand(long cooperativeId, AddCooperativeMemberResource resource) =>
-        new(cooperativeId, new Dni(resource.Dni), resource.FirstName, resource.LastName, resource.Community, resource.JoinedAt);
+        new(cooperativeId, new Dni(resource.Dni), resource.FirstName, resource.LastName, resource.Community, resource.JoinedAt, resource.UserId);
 
     public static InviteAgronomistCommand ToCommand(long cooperativeId, InviteAgronomistResource resource) =>
         new(cooperativeId, resource.Email);
@@ -31,11 +31,11 @@ internal static class ProfilesResourceAssembler
         new(model.Id, model.Ruc, model.BusinessName, model.Region, model.ManagerUserId);
 
     public static CooperativeMemberResource ToResource(CooperativeMember model) =>
-        new(model.Id, model.CooperativeId, model.Dni, model.FirstName, model.LastName, model.Community, model.JoinedAt);
+        new(model.Id, model.CooperativeId, model.Dni, model.FirstName, model.LastName, model.Community, model.JoinedAt, model.UserId);
 
     public static AgronomistInvitationResource ToResource(AgronomistInvitation model) =>
         new(model.Id, model.CooperativeId, model.Email, model.Status, model.SentAt);
 
     public static AgronomistAssignmentResource ToResource(AgronomistAssignment model) =>
-        new(model.Id, model.CooperativeId, model.AgronomistUserId, model.PlotId, model.AssignedAt, model.Active);
+        new(model.Id, model.CooperativeId, model.AgronomistUserId, model.PlotId, model.AssignedAt, model.Active, model.History.OrderBy(entry => entry.EndedAt).Select(entry => new AssignmentHistoryEntryResource(entry.AgronomistUserId, entry.AssignedAt, entry.EndedAt)).ToArray());
 }
