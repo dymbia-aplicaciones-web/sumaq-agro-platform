@@ -15,6 +15,7 @@ public interface IProfilesQueryService
     Task<List<Profile>> ListProfilesAsync(long? userId, CancellationToken ct);
     Task<Profile?> FindProfileAsync(GetProfileByUserIdQuery query, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<AgronomistAssignment>> ListActiveAssignmentsByAgronomistAsync(long userId, CancellationToken ct);
     Task<AgronomistAssignment?> FindActiveAssignmentAsync(GetActiveAssignmentByPlotQuery query, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<AgronomistAssignment>> ListAssignmentsAsync(GetAssignmentsByCooperativeQuery query, CancellationToken cancellationToken);
