@@ -10,6 +10,8 @@ public interface IProfilesCommandService
 {
     Task<Result<Profile>> UpdateAsync(UpdateProfileCommand command, CancellationToken cancellationToken);
 
+    Task<Result<AgronomistAssignment>> ReassignAsync(long id, long userId, CancellationToken ct);
+    Task<Result<Cooperative>> UpdateCooperativeAsync(long id, RegisterCooperativeCommand command, CancellationToken ct);
     Task<Result<Cooperative>> RegisterAsync(RegisterCooperativeCommand command, CancellationToken cancellationToken);
 
     Task<Result<CooperativeMember>> AddMemberAsync(AddCooperativeMemberCommand command, CancellationToken cancellationToken);

@@ -23,7 +23,8 @@ public sealed record AddCooperativeMemberResource(
     [param: Required, StringLength(100)] string FirstName,
     [param: Required, StringLength(100)] string LastName,
     [param: Required, StringLength(100)] string Community,
-    DateOnly? JoinedAt);
+    DateOnly? JoinedAt,
+    [param: Range(1, long.MaxValue)] long? UserId = null);
 
 public sealed record InviteAgronomistResource([param: Required, StringLength(255)] string Email);
 
