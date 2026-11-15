@@ -46,6 +46,8 @@ public sealed class SatelliteObservationConfiguration : IEntityTypeConfiguration
 {
     public void Configure(EntityTypeBuilder<SatelliteObservation> builder)
     {
+        builder.Property(observation => observation.ImportKey).HasMaxLength(64);
+        builder.HasIndex(observation => observation.ImportKey).IsUnique();
         builder.HasIndex(observation => new { observation.PlotId, observation.CapturedAt });
     }
 }

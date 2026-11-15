@@ -410,6 +410,11 @@ namespace SumaqAgro.Platform.Migrations
                         .HasColumnType("double")
                         .HasColumnName("cloud_coverage_percent");
 
+                    b.Property<string>("ImportKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("import_key");
+
                     b.Property<double?>("NdviMean")
                         .HasColumnType("double")
                         .HasColumnName("ndvi_mean");
@@ -433,6 +438,10 @@ namespace SumaqAgro.Platform.Migrations
 
                     b.HasKey("Id")
                         .HasName("p_k_satellite_observations");
+
+                    b.HasIndex("ImportKey")
+                        .IsUnique()
+                        .HasDatabaseName("i_x_satellite_observations_import_key");
 
                     b.HasIndex("PlotId", "CapturedAt")
                         .HasDatabaseName("i_x_satellite_observations_plot_id_captured_at");
