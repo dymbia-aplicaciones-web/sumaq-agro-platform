@@ -1,3 +1,4 @@
+using SumaqAgro.Platform.Subscriptions.Domain.Model.Commands;
 using SumaqAgro.Platform.Subscriptions.Domain.Model.Queries;
 using SumaqAgro.Platform.Subscriptions.Interfaces.Rest.Transform;
 using SumaqAgro.Platform.Shared.Application.Model;
@@ -33,6 +34,31 @@ public sealed class SubscriptionsController(ISubscriptionsQueryService repositor
         if (user is null) return Unauthorized();
         var subscription = await repository.FindSubscriptionAsync(new GetSubscriptionByUserIdQuery(user.Id), ct);
         return subscription is null ? NoContent() : new JsonResult(SubscriptionResourceAssembler.ToResource(subscription));
+    }
+
+    [HttpGet("payments")]
+    [ProducesResponseType<PaymentResource[]>(200)]
+    public async Task<IActionResult> GetPayments(CancellationToken ct)
+    {
+        var user = await CurrentUserAsync(ct);
+        if (user is null) return Unauthorized();
+
+        var payments = await repository.ListPaymentsAsync(new GetPaymentsByUserIdQuery(user.Id), ct);
+        return new JsonResult(payments.Select(SubscriptionResourceAssembler.ToResource).ToArray());
+    }
+
+    [HttpPost("cancel")]
+    [ProducesResponseType<SubscriptionResource>(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> Cancel(CancellationToken ct)
+    {
+        var user = await CurrentUserAsync(ct);
+        if (user is null) return Unauthorized();
+
+        var result = await checkout.CancelAsync(new CancelSubscriptionCommand(user.Id), ct);
+        return Respond(result.Match(
+            subscription => Result<SubscriptionResource>.Success(SubscriptionResourceAssembler.ToResource(subscription)),
+            Result<SubscriptionResource>.Failure));
     }
 
     [HttpPost("checkout")]

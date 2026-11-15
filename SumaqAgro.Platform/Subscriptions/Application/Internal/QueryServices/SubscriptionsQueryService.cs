@@ -13,4 +13,7 @@ public sealed class SubscriptionsQueryService(ISubscriptionsRepository repositor
 
     public Task<Subscription?> FindSubscriptionAsync(GetSubscriptionByUserIdQuery query, CancellationToken ct) =>
         repository.FindSubscriptionAsync(query.UserId, ct);
+
+    public Task<List<Payment>> ListPaymentsAsync(GetPaymentsByUserIdQuery query, CancellationToken ct) =>
+        repository.ListPaymentsAsync(query.UserId, ct);
 }
