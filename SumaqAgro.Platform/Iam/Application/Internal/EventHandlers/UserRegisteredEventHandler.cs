@@ -9,7 +9,7 @@ public sealed class UserRegisteredEventHandler(IProfilesContextFacade profiles) 
     public Task Handle(UserRegisteredEvent domainEvent, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        profiles.CreateInitialProfile(domainEvent.User, domainEvent.FirstName, domainEvent.LastName);
+        profiles.CreateInitialProfile(domainEvent.UserId, domainEvent.FirstName, domainEvent.LastName);
         return Task.CompletedTask;
     }
 }
