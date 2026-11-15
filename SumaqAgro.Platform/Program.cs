@@ -1,3 +1,7 @@
+using SumaqAgro.Platform.Profiles.Application.Internal.OutboundServices;
+using SumaqAgro.Platform.Profiles.Infrastructure.Acl;
+using SumaqAgro.Platform.Subscriptions.Application.Acl;
+using SumaqAgro.Platform.Subscriptions.Interfaces.Acl;
 using SumaqAgro.Platform.Iam.Infrastructure.Email;
 using SumaqAgro.Platform.Farming.Domain.Repositories;
 using Cortex.Mediator.Commands;
@@ -118,6 +122,8 @@ builder.Services.AddScoped<ICertificationRepository, CertificationRepository>();
 builder.Services.AddScoped<ICertificationService, CertificationService>();
 builder.Services.AddSingleton<CertificatePdf>();
 builder.Services.AddScoped<ISubscriptionsRepository, SubscriptionsRepository>();
+builder.Services.AddScoped<IAdvisorSubscriptionFacade, AdvisorSubscriptionFacade>();
+builder.Services.AddScoped<IAdvisorPlotQuota, AdvisorPlotQuota>();
 builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHttpClient<IPolygonMonitoring, PolygonMonitoring>(client =>
