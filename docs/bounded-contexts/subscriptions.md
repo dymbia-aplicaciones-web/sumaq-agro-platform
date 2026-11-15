@@ -4,7 +4,7 @@ Manages the plan catalog, subscriptions for authenticated users, and simulated p
 
 ## Business rules
 
-`SEED` is available to `ROLE_FARMER`, `COOPERATIVE_PRO` to `ROLE_COOPERATIVE_DIRECTOR`, and `TECHNICAL_ADVISOR` to `ROLE_AGRONOMIST`. Checkout calculates the amount using the monthly or annual billing cycle. A simulated `COMPLETED` payment creates the subscription. A declined payment is recorded and can be retried. Users with an existing subscription cannot check out again.
+`SEED` is available to `ROLE_FARMER`, `COOPERATIVE_PRO` to `ROLE_COOPERATIVE_DIRECTOR`, and `TECHNICAL_ADVISOR` to `ROLE_AGRONOMIST`. Checkout calculates the amount using the monthly or annual billing cycle. A simulated `COMPLETED` payment creates the subscription. A declined payment is recorded and can be retried. An approved checkout for the same plan renews the existing subscription. It preserves unused paid time, or starts a new period if the previous one has expired. Cancellation preserves the paid end date and can be repeated. Payment history lists the authenticated account's attempts, newest first.
 
 ## Endpoints
 
@@ -13,6 +13,8 @@ Manages the plan catalog, subscriptions for authenticated users, and simulated p
 | `GET` | `/api/v1/plans` | List plans |
 | `GET` | `/api/v1/subscriptions/me` | Get the authenticated user's subscription |
 | `POST` | `/api/v1/subscriptions/me/checkout` | Simulate payment for a plan |
+| `POST` | `/api/v1/subscriptions/me/cancel` | Cancel renewal for the current subscription |
+| `GET` | `/api/v1/subscriptions/me/payments` | List the current account's payment attempts |
 
 ## Persistence
 
@@ -20,6 +22,6 @@ Entity Framework Core manages these MySQL tables: `plans`, `subscriptions`, `pay
 
 ## Local testing
 
-Use a JWT with the role required by your plan. Test a declined payment first, then an approved payment, and check `/api/v1/subscriptions/me`. The initial plans are seeded by a migration.
+Use a JWT with the role required by your plan. Test a declined payment first, then an approved payment, and check `/api/v1/subscriptions/me`. Cancel renewal and check that the paid end date is preserved. Then submit another approved checkout for the same plan and inspect payment history. The initial plans are seeded by a migration.
 
 Run the [subscriptions.http](../../SumaqAgro.Platform/Requests/subscriptions.http) requests in Rider or use [Scalar](http://localhost:5192/scalar/v1) while the API is running with the local launch profile.

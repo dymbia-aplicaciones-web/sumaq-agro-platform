@@ -9,4 +9,5 @@ namespace SumaqAgro.Platform.Subscriptions.Application.CommandServices;
 public interface ICheckoutService
 {
     Task<Result<Payment>> CheckoutAsync(CheckoutCommand command, CancellationToken ct);
+    Task<Result<Subscription>> CancelAsync(CancelSubscriptionCommand command, CancellationToken ct);
 }

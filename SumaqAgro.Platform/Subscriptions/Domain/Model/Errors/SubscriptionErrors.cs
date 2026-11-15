@@ -6,5 +6,6 @@ public static class SubscriptionErrors
 {
     public static readonly Error PlanNotAllowed = Error.Forbidden("PlanRole", "The role cannot select this plan.");
     public static readonly Error PlanNotFound = Error.NotFound("Plan", "Plan not found.");
-    public static readonly Error AlreadySubscribed = Error.Conflict("Subscription", "The account already has a subscription.");
+    public static readonly Error SubscriptionNotFound = Error.NotFound("Subscription", "Subscription not found.");
+    public static readonly Error PlanMismatch = Error.Conflict("Subscription", "The selected plan must match the existing subscription.");
 }

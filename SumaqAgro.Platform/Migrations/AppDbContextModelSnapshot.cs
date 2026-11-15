@@ -926,7 +926,7 @@ namespace SumaqAgro.Platform.Migrations
                         .HasColumnName("amount");
 
                     b.Property<DateTimeOffset>("AttemptedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("datetime(6)")
                         .HasColumnName("attempted_at");
 
                     b.Property<string>("BillingCycle")
