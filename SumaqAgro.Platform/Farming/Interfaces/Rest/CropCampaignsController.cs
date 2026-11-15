@@ -28,6 +28,16 @@ public sealed class CropCampaignsController(IFarmingCommandService commands, IFa
         Found((await repository.FindCampaignAsync(new GetCropCampaignByIdQuery(cropCampaignId), ct)) is { } campaign
             ? CropCampaignAssembler.ToResource(campaign) : null, "CropCampaign");
 
+    [HttpPatch("{cropCampaignId:long}")]
+    public async Task<IActionResult> Update(long cropCampaignId, UpdateCropCampaignResource resource, CancellationToken ct)
+    {
+        if (resource.SeedVariety is not null && string.IsNullOrWhiteSpace(resource.SeedVariety))
+            return BadRequest();
+        return Respond(CropCampaignAssembler.ToResource(await commands.UpdateCampaignAsync(
+            new(cropCampaignId, resource.CropType?.Trim().ToUpperInvariant(), resource.SeedVariety?.Trim(),
+                resource.CustomSeedVariety, resource.SowingDate), ct)));
+    }
+
     [HttpPut("{cropCampaignId:long}/crop-type")]
     [ProducesResponseType<CropCampaignResource>(200)]
     public async Task<IActionResult> SelectCrop(long cropCampaignId, SelectCropTypeResource resource, CancellationToken ct) =>

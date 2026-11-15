@@ -11,6 +11,14 @@ public sealed class FieldPlotConfiguration : IEntityTypeConfiguration<FieldPlot>
 {
     public void Configure(EntityTypeBuilder<FieldPlot> builder)
     {
+        builder.OwnsOne(plot => plot.SoilBaseline, soil =>
+        {
+            soil.WithOwner().HasForeignKey("FieldPlotId");
+            soil.Property<long>("FieldPlotId").HasColumnName("id");
+            soil.Property(value => value.Ph).HasPrecision(4, 2);
+            soil.Property(value => value.Texture).HasMaxLength(16);
+            soil.Property(value => value.OrganicMatterPercentage).HasPrecision(5, 2);
+        });
         builder.HasIndex(plot => new { plot.OwnerUserId, plot.Name }).IsUnique();
         builder.Property(plot => plot.Name).HasMaxLength(100);
         builder.Property(plot => plot.Region).HasMaxLength(150);

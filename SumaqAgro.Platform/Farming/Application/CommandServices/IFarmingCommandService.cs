@@ -8,6 +8,8 @@ namespace SumaqAgro.Platform.Farming.Application.CommandServices;
 
 public interface IFarmingCommandService
 {
+    Task<Result<FieldPlot>> RecordSoilBaselineAsync(RecordSoilBaselineCommand command, CancellationToken ct);
+    Task<Result<CropCampaign>> UpdateCampaignAsync(UpdateCropCampaignCommand command, CancellationToken ct);
     Task<Result<FieldPlot>> RegisterAsync(RegisterFieldPlotCommand command, CancellationToken ct);
 
     Task<Result<FieldPlot>> DelineateAsync(DelineateFieldPlotCommand command, CancellationToken ct);

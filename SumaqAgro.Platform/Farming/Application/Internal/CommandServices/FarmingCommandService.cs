@@ -16,6 +16,27 @@ namespace SumaqAgro.Platform.Farming.Application.Internal.CommandServices;
 
 public sealed class FarmingCommandService(IFarmingRepository repository, IUnitOfWork unitOfWork, IPolygonMonitoring monitoring) : IFarmingCommandService
 {
+    public async Task<Result<FieldPlot>> RecordSoilBaselineAsync(RecordSoilBaselineCommand command, CancellationToken ct)
+    {
+        var plot = await repository.FindPlotAsync(command.Id, ct);
+        if (plot is null) return Result<FieldPlot>.Failure(FarmingErrors.PlotNotFound);
+        if (command.Baseline.RecordedAt > DateOnly.FromDateTime(DateTime.UtcNow))
+            return Result<FieldPlot>.Failure(Error.Validation("SoilBaseline", "The soil recording date cannot be in the future."));
+
+        plot.RecordSoilBaseline(command.Baseline);
+        await unitOfWork.CompleteAsync(ct);
+        return Result<FieldPlot>.Success(plot);
+    }
+
+    public Task<Result<CropCampaign>> UpdateCampaignAsync(UpdateCropCampaignCommand command, CancellationToken ct) =>
+        ChangeAsync(command.Id, campaign =>
+        {
+            if (command.Crop is { } crop) campaign.SelectCrop(crop);
+            if (command.Seed is not null || command.Custom is not null)
+                campaign.SpecifySeed(command.Seed ?? campaign.SeedVariety, command.Custom ?? campaign.CustomSeedVariety);
+            if (command.SowingDate is { } date) campaign.RecordSowing(date);
+        }, ct);
+
     public async Task<Result<FieldPlot>> RegisterAsync(RegisterFieldPlotCommand command, CancellationToken ct)
     {
         await using var transaction = await repository.BeginPlotRegistrationAsync(ct);
