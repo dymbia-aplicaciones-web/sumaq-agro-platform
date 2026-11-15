@@ -10,6 +10,8 @@ public sealed class User(string email, string passwordHash, string role) : Aggre
     public string PasswordHash { get; private set; } = passwordHash;
     public string Role { get; private set; } = role;
 
+    public void ChangePassword(string hash) => PasswordHash = hash;
+
     public static User Register(string email, string passwordHash, string role, string firstName, string lastName)
     {
         var user = new User(email, passwordHash, role);

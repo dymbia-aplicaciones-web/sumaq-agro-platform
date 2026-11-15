@@ -37,3 +37,15 @@ Accept: application/json
     client.global.set("iamToken", response.body.token);
   }
 %}
+
+### Request a password reset
+POST {{host}}/api/v1/authentication/password-recovery/request
+Content-Type: application/json
+
+{ "email": "{{iamEmail}}" }
+
+### Reset the password with the token received by email
+POST {{host}}/api/v1/authentication/password-recovery/reset
+Content-Type: application/json
+
+{ "token": "{{passwordResetToken}}", "newPassword": "PruebaNueva456!" }

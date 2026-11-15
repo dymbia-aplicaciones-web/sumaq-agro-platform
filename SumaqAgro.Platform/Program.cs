@@ -1,3 +1,4 @@
+using SumaqAgro.Platform.Iam.Infrastructure.Email;
 using SumaqAgro.Platform.Farming.Domain.Repositories;
 using Cortex.Mediator.Commands;
 using SumaqAgro.Platform.Shared.Infrastructure.Interfaces.AspNetCore.Configuration;
@@ -87,6 +88,10 @@ builder.Services.AddDbContext<AppDbContext>((services, options) =>
 });
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
+builder.Services.AddScoped<IPasswordRecoveryService, PasswordRecoveryService>();
+builder.Services.AddHttpClient<IPasswordResetEmail, BrevoPasswordResetEmail>(client =>
+    client.Timeout = TimeSpan.FromSeconds(10)).RemoveAllLoggers();
 builder.Services.AddSingleton<IHashingService, BCryptHashingService>();
 builder.Services.AddScoped<IUserCommandService, UserCommandService>();
 builder.Services.AddScoped<ISignInService, SignInService>();

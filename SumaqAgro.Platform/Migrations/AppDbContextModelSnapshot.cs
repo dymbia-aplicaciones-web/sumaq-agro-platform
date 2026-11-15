@@ -614,6 +614,35 @@ namespace SumaqAgro.Platform.Migrations
                     b.ToTable("field_plots");
                 });
 
+            modelBuilder.Entity("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.PasswordResetToken", b =>
+                {
+                    b.Property<string>("Digest")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("digest");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("expires_at");
+
+                    b.Property<bool>("Used")
+                        .IsConcurrencyToken()
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("used");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Digest")
+                        .HasName("p_k_password_reset_tokens");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("i_x_password_reset_tokens_user_id");
+
+                    b.ToTable("password_reset_tokens", (string)null);
+                });
+
             modelBuilder.Entity("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.User", b =>
                 {
                     b.Property<long>("Id")
@@ -1096,6 +1125,16 @@ namespace SumaqAgro.Platform.Migrations
                         });
 
                     b.Navigation("SoilBaseline");
+                });
+
+            modelBuilder.Entity("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.PasswordResetToken", b =>
+                {
+                    b.HasOne("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("f_k_password_reset_tokens_users_user_id");
                 });
 
             modelBuilder.Entity("SumaqAgro.Platform.Profiles.Domain.Model.Aggregates.AgronomistAssignment", b =>
