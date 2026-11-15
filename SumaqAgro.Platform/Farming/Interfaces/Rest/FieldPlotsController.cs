@@ -37,6 +37,23 @@ public sealed class FieldPlotsController(IFarmingCommandService commands, IFarmi
     public async Task<FieldPlotResource[]> List([FromQuery, BindRequired] long ownerUserId, CancellationToken ct) =>
         (await repository.ListPlotsAsync(new GetFieldPlotsByOwnerQuery(ownerUserId), ct)).Select(FieldPlotAssembler.ToResource).ToArray();
 
+    [HttpPut("{fieldPlotId:long}/polygon")]
+    public Task<IActionResult> SetPolygon(long fieldPlotId, DelineatePlotPolygonResource resource, CancellationToken ct) =>
+        Delineate(fieldPlotId, new DelineatePlotBoundaryResource(resource.Coordinates), ct);
+
+    [HttpPut("{fieldPlotId:long}/soil-baseline")]
+    public async Task<IActionResult> RecordSoilBaseline(long fieldPlotId, SoilBaselineResource resource, CancellationToken ct)
+    {
+        var baseline = new SoilBaseline(
+            Math.Round(resource.Ph!.Value, 2, MidpointRounding.AwayFromZero),
+            resource.Texture.ToUpperInvariant(),
+            Math.Round(resource.OrganicMatterPercentage!.Value, 2, MidpointRounding.AwayFromZero),
+            resource.RecordedAt!.Value);
+        return Respond((await commands.RecordSoilBaselineAsync(new(fieldPlotId, baseline), ct)).Match(
+            plot => Shared.Application.Model.Result<FieldPlotResource>.Success(FieldPlotAssembler.ToResource(plot)),
+            Shared.Application.Model.Result<FieldPlotResource>.Failure));
+    }
+
     [HttpPut("{fieldPlotId:long}/boundary")]
     [ProducesResponseType<FieldPlotResource>(200)]
     public async Task<IActionResult> Delineate(long fieldPlotId, DelineatePlotBoundaryResource resource, CancellationToken ct)
