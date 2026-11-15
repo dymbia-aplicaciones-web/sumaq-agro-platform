@@ -107,3 +107,31 @@ Accept: application/json
 POST {{host}}/api/v1/crop-campaigns/{{cropCampaignId}}/closures
 Authorization: Bearer {{iamToken}}
 Accept: application/json
+
+### Record soil baseline
+PUT {{host}}/api/v1/field-plots/{{fieldPlotId}}/soil-baseline
+Authorization: Bearer {{iamToken}}
+Content-Type: application/json
+
+{ "ph": 6.25, "texture": "LOAMY", "organicMatterPercentage": 3.2, "recordedAt": "2026-11-11" }
+
+### Update an active crop campaign
+PATCH {{host}}/api/v1/crop-campaigns/{{cropCampaignId}}
+Authorization: Bearer {{iamToken}}
+Content-Type: application/json
+
+{ "seedVariety": "Canchan", "customSeedVariety": false }
+
+### Set the plot polygon using the Open Source contract
+PUT {{host}}/api/v1/field-plots/{{fieldPlotId}}/polygon
+Authorization: Bearer {{iamToken}}
+Content-Type: application/json
+
+{
+  "coordinates": [
+    { "latitude": -13.500, "longitude": -71.900 },
+    { "latitude": -13.500, "longitude": -71.898 },
+    { "latitude": -13.498, "longitude": -71.898 },
+    { "latitude": -13.498, "longitude": -71.900 }
+  ]
+}
