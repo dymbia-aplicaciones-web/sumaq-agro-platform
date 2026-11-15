@@ -21,6 +21,7 @@ public interface IProfilesRepository
     Task<AgronomistAssignment?> FindAssignmentAsync(long id, CancellationToken ct);
     Task<int> CountActiveAssignmentsAsync(long userId, CancellationToken ct);
     void AddAssignment(AgronomistAssignment assignment);
+    Task<IReadOnlyList<AgronomistAssignment>> ListActiveAssignmentsByAgronomistAsync(long userId, CancellationToken ct);
     Task<AgronomistAssignment?> FindActiveAssignmentAsync(long plotId, CancellationToken cancellationToken);
     Task<IReadOnlyList<AgronomistAssignment>> ListAssignmentsAsync(long cooperativeId, CancellationToken cancellationToken);
 }

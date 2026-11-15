@@ -32,6 +32,9 @@ public sealed class ProfilesQueryService(IProfilesRepository profiles) : IProfil
     public Task<Profile?> FindProfileAsync(GetProfileByUserIdQuery query, CancellationToken cancellationToken) =>
         profiles.FindProfileAsync(query.UserId, cancellationToken);
 
+    public Task<IReadOnlyList<AgronomistAssignment>> ListActiveAssignmentsByAgronomistAsync(long userId, CancellationToken ct) =>
+        profiles.ListActiveAssignmentsByAgronomistAsync(userId, ct);
+
     public Task<AgronomistAssignment?> FindActiveAssignmentAsync(GetActiveAssignmentByPlotQuery query, CancellationToken cancellationToken) =>
         profiles.FindActiveAssignmentAsync(query.PlotId, cancellationToken);
 

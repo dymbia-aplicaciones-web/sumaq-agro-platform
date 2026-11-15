@@ -51,6 +51,11 @@ public sealed class ProfilesRepository(AppDbContext context) : IProfilesReposito
     public Task<bool> CooperativeExistsAsync(long id, CancellationToken cancellationToken) =>
         context.Set<Cooperative>().AnyAsync(cooperative => cooperative.Id == id, cancellationToken);
 
+    public async Task<IReadOnlyList<AgronomistAssignment>> ListActiveAssignmentsByAgronomistAsync(long userId, CancellationToken ct) =>
+        await context.Set<AgronomistAssignment>().AsNoTracking()
+            .Where(assignment => assignment.AgronomistUserId == userId && assignment.Active)
+            .OrderBy(assignment => assignment.Id).ToListAsync(ct);
+
     public Task<AgronomistAssignment?> FindActiveAssignmentAsync(long plotId, CancellationToken cancellationToken) =>
         context.Set<AgronomistAssignment>().AsNoTracking()
             .SingleOrDefaultAsync(assignment => assignment.PlotId == plotId && assignment.Active, cancellationToken);

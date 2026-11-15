@@ -1,6 +1,8 @@
 using SumaqAgro.Platform.Profiles.Interfaces.Rest.Transform;
 using SumaqAgro.Platform.Profiles.Domain.Model.Queries;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using SumaqAgro.Platform.Iam.Interfaces.Acl;
 using System.ComponentModel.DataAnnotations;
 using SumaqAgro.Platform.Shared.Interfaces.Rest.ProblemDetails;
 using SumaqAgro.Platform.Profiles.Application.CommandServices;
@@ -14,7 +16,7 @@ namespace SumaqAgro.Platform.Profiles.Interfaces.Rest;
 
 [ApiController]
 [Route("api/v1/agronomist-assignments")]
-public sealed class AgronomistAssignmentsController(IProfilesCommandService commands, IProfilesQueryService queries, ProblemDetailsFactory problems)
+public sealed class AgronomistAssignmentsController(IProfilesCommandService commands, IProfilesQueryService queries, ProblemDetailsFactory problems, IIamAccounts accounts)
     : ControllerBase
 {
     [HttpGet("{assignmentId:long}")]
@@ -39,6 +41,20 @@ public sealed class AgronomistAssignmentsController(IProfilesCommandService comm
     {
         var assignment = await commands.AssignAsync(ProfilesResourceAssembler.ToCommand(resource), cancellationToken);
         return assignment.IsFailure ? problems.CreateProblemDetails(HttpContext, assignment.DomainError) : new JsonResult(ProfilesResourceAssembler.ToResource(assignment.Value!)) { StatusCode = StatusCodes.Status201Created };
+    }
+
+    [HttpGet("me")]
+    [ProducesResponseType<AgronomistAssignmentResource[]>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMine(CancellationToken ct)
+    {
+        var email = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (string.IsNullOrWhiteSpace(email) || await accounts.FindAsync(email, ct) is not { } account)
+            return Unauthorized();
+        if (account.Role != "ROLE_AGRONOMIST")
+            return Forbid();
+
+        var assignments = await queries.ListActiveAssignmentsByAgronomistAsync(account.Id, ct);
+        return Ok(assignments.Select(ProfilesResourceAssembler.ToResource).ToArray());
     }
 
     [HttpGet("plot/{plotId:long}")]
