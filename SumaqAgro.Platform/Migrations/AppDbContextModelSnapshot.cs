@@ -511,6 +511,28 @@ namespace SumaqAgro.Platform.Migrations
                     b.ToTable("technical_prescriptions");
                 });
 
+            modelBuilder.Entity("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CampaignLedger", b =>
+                {
+                    b.Property<long>("CampaignId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("campaign_id");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("json")
+                        .HasColumnName("payload");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("version");
+
+                    b.HasKey("CampaignId")
+                        .HasName("p_k_campaign_ledgers");
+
+                    b.ToTable("campaign_ledgers", (string)null);
+                });
+
             modelBuilder.Entity("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CropCampaign", b =>
                 {
                     b.Property<long>("Id")
@@ -1085,6 +1107,16 @@ namespace SumaqAgro.Platform.Migrations
                         .HasConstraintName("f_k_quality_certificates_harvest_batches_harvest_batch_id");
                 });
 
+            modelBuilder.Entity("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CampaignLedger", b =>
+                {
+                    b.HasOne("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CropCampaign", null)
+                        .WithOne()
+                        .HasForeignKey("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CampaignLedger", "CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("f_k_campaign_ledgers__crop_campaign_campaign_id");
+                });
+
             modelBuilder.Entity("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CropCampaign", b =>
                 {
                     b.HasOne("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.FieldPlot", null)
@@ -1189,14 +1221,12 @@ namespace SumaqAgro.Platform.Migrations
 
             modelBuilder.Entity("SumaqAgro.Platform.Profiles.Domain.Model.Aggregates.Profile", b =>
                 {
-                    b.HasOne("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.User", "User")
+                    b.HasOne("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.User", null)
                         .WithOne()
                         .HasForeignKey("SumaqAgro.Platform.Profiles.Domain.Model.Aggregates.Profile", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("f_k_profiles_users_user_id");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SumaqAgro.Platform.Profiles.Domain.Model.Entities.AgronomistInvitation", b =>
