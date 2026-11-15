@@ -187,12 +187,17 @@ builder.Services.AddScoped<ITraceabilityQueryService, TraceabilityQueryService>(
 
 builder.Services.AddScoped<ISubscriptionsQueryService, SubscriptionsQueryService>();
 
+var frontendOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+if (frontendOrigins.Length > 0)
+    builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+        policy.WithOrigins(frontendOrigins).AllowAnyHeader().AllowAnyMethod()));
+
 var app = builder.Build();
 
 app.UseGlobalExceptionHandler();
 app.UseRequestLocalization(new RequestLocalizationOptions().SetDefaultCulture("en").AddSupportedCultures("en", "es").AddSupportedUICultures("en", "es"));
 
-if (app.Environment.IsDevelopment() &&
+if ((app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:ApplyMigrations")) &&
     !string.IsNullOrWhiteSpace(app.Configuration.GetConnectionString("DefaultConnection")))
 {
     await using var scope = app.Services.CreateAsyncScope();
@@ -206,6 +211,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference().AllowAnonymous();
 }
 
+if (frontendOrigins.Length > 0) app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers().RequireAuthorization();
