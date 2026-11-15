@@ -1,6 +1,8 @@
 using SumaqAgro.Platform.Iam.Infrastructure.Email;
 using SumaqAgro.Platform.Farming.Domain.Repositories;
 using Cortex.Mediator.Commands;
+using SumaqAgro.Platform.Crop.Application.Internal.OutboundServices;
+using SumaqAgro.Platform.Crop.Infrastructure.Acl;
 using SumaqAgro.Platform.Shared.Infrastructure.Interfaces.AspNetCore.Configuration;
 using SumaqAgro.Platform.Shared.Infrastructure.Interfaces.AspNetCore.OpenApi;
 using SumaqAgro.Platform.Shared.Infrastructure.Mediator.Cortex.Configuration;
@@ -102,6 +104,14 @@ builder.Services.AddScoped<IProfilesQueryService, ProfilesQueryService>();
 builder.Services.AddScoped<IFarmingRepository, FarmingRepository>();
 builder.Services.AddScoped<IFarmingCommandService, FarmingCommandService>();
 builder.Services.AddScoped<ICropRepository, CropRepository>();
+builder.Services.AddScoped<ISatelliteObservationCommandService, SatelliteObservationCommandService>();
+builder.Services.AddHttpClient<ISatelliteImagery, AgroMonitoringSatelliteImagery>(client =>
+{
+    var baseUrl = builder.Configuration["AgroMonitoring:BaseUrl"] ?? "https://api.agromonitoring.com/agro/1.0/";
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(15);
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+    .RemoveAllLoggers();
 builder.Services.AddScoped<ICropCommandService, CropCommandService>();
 builder.Services.AddScoped<ICropMonitoringService, CropMonitoringService>();
 builder.Services.AddScoped<ICertificationRepository, CertificationRepository>();

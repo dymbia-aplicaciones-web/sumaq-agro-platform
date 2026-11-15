@@ -37,3 +37,9 @@ Entity Framework Core manages these MySQL tables: `pest_reports`, `field_inspect
 Use a JWT and a plot ID from Farming. Submit a report, complete an inspection, issue a prescription, and record its application. Use a separate report to test deletion.
 
 Run the [crop.http](../../SumaqAgro.Platform/Requests/crop.http) requests in Rider or use [Scalar](http://localhost:5192/scalar/v1) while the API is running with the local launch profile.
+
+## Satellite imports
+
+Send a POST request to /api/v1/satellite-observations/import with plotId, start, and end. Use the plot owner's JWT and link the plot to an AgroMonitoring polygon first. Set AgroMonitoring:ApiKey in local secrets or deployment configuration. Use a date range with available satellite imagery.
+
+The API imports the latest usable observation and returns 200. Repeating an import for the same plot, capture time, and source returns the existing observation. Read stored observations using the existing GET endpoint. A missing polygon returns 409, an invalid interval returns 400, and an unavailable observation or inaccessible plot returns 404.

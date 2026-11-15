@@ -10,6 +10,7 @@ public interface ICropRepository
     Task<List<PestReport>> ListReportsAsync(long plotId, CancellationToken ct);
     Task<List<FieldInspection>> ListInspectionsAsync(long plotId, CancellationToken ct);
     Task<List<TechnicalPrescription>> ListPrescriptionsAsync(long plotId, CancellationToken ct);
+    Task<SatelliteObservation?> FindImportedObservationAsync(string key, CancellationToken ct);
     Task<List<SatelliteObservation>> ListObservationsAsync(long plotId, CancellationToken ct);
     Task<List<ClimateForecast>> ListForecastsAsync(string region, CancellationToken ct);
     Task<List<AgroclimaticAlert>> ListAlertsAsync(string region, CancellationToken ct);
