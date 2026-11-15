@@ -31,3 +31,9 @@ Entity Framework Core manages these MySQL tables: `field_plots`, `crop_campaigns
 Use a JWT and register a plot before starting a campaign. To test boundary registration, configure `AgroMonitoring:ApiKey` or `AGROMONITORING_API_KEY`.
 
 Run the [farming.http](../../SumaqAgro.Platform/Requests/farming.http) requests in Rider or use [Scalar](http://localhost:5192/scalar/v1) while the API is running with the local launch profile.
+
+## Soil baseline, polygon, and campaign updates
+
+- Use PUT /api/v1/field-plots/{fieldPlotId}/soil-baseline to record pH, texture, organic matter percentage, and recordedAt. The plot response includes soilBaseline when available.
+- Use PUT /api/v1/field-plots/{fieldPlotId}/polygon with coordinates. The boundary route with vertices remains available.
+- Use PATCH /api/v1/crop-campaigns/{cropCampaignId} to update one or more fields in an active campaign. Run the PATCH sample before closing the campaign.
