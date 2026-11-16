@@ -85,6 +85,7 @@ Content-Type: application/json
 > {%
   if (response.status === 201) {
     client.global.set("profilePlotId", response.body.plotId);
+    client.global.set("assignmentId", response.body.id);
   }
 %}
 
@@ -97,3 +98,29 @@ Accept: application/json
 GET {{host}}/api/v1/agronomist-assignments?cooperativeId={{cooperativeId}}
 Authorization: Bearer {{iamToken}}
 Accept: application/json
+
+### List profiles for the signed-in user
+GET {{host}}/api/v1/profiles?userId={{iamUserId}}
+Authorization: Bearer {{iamToken}}
+
+> {%
+  if (response.status === 200 && response.body.length > 0) {
+    client.global.set("profileId", response.body[0].id);
+  }
+%}
+
+### Get a profile by profile ID
+GET {{host}}/api/v1/profiles/{{profileId}}
+Authorization: Bearer {{iamToken}}
+
+### List cooperatives
+GET {{host}}/api/v1/cooperatives
+Authorization: Bearer {{iamToken}}
+
+### List members of the cooperative
+GET {{host}}/api/v1/cooperative-members?cooperativeId={{cooperativeId}}
+Authorization: Bearer {{iamToken}}
+
+### Get an assignment and its history
+GET {{host}}/api/v1/agronomist-assignments/{{assignmentId}}
+Authorization: Bearer {{iamToken}}

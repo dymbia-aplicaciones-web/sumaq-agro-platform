@@ -2,6 +2,9 @@ namespace SumaqAgro.Platform.Crop.Domain.Model.Aggregates;
 
 public sealed class SatelliteObservation(long plotId, DateTimeOffset capturedAt, string source, double? ndviMean, double? ndwiMean, double cloudCoveragePercent, double? surfaceTempKelvin)
 {
+    public string? ImportKey { get; private set; }
+    public void MarkImported(string key) => ImportKey = key;
+
     public long Id { get; private set; }
     public long PlotId { get; private set; } = plotId;
     public DateTimeOffset CapturedAt { get; private set; } = capturedAt;

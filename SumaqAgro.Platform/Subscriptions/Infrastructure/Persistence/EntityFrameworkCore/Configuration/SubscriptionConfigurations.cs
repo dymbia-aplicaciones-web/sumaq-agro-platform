@@ -34,6 +34,7 @@ public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
     {
         builder.HasKey(payment => payment.Reference);
         builder.Property(payment => payment.Reference).HasMaxLength(41);
+        builder.Property(payment => payment.AttemptedAt).HasColumnType("datetime(6)");
         builder.HasOne(payment => payment.Subscription).WithMany().HasForeignKey(payment => payment.SubscriptionId);
         builder.HasOne<User>().WithMany().HasForeignKey(payment => payment.UserId);
         builder.HasOne<Plan>().WithMany().HasForeignKey(payment => payment.PlanCode);

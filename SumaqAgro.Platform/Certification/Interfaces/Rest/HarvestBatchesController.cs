@@ -3,6 +3,10 @@ using SumaqAgro.Platform.Certification.Domain.Model.Queries;
 using SumaqAgro.Platform.Certification.Interfaces.Rest.Resources;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.IdentityModel.Tokens.Jwt;
+using SumaqAgro.Platform.Iam.Interfaces.Acl;
+using SumaqAgro.Platform.Profiles.Application.QueryServices;
 using SumaqAgro.Platform.Certification.Application.CommandServices;
 using SumaqAgro.Platform.Certification.Domain.Model.Aggregates;
 using SumaqAgro.Platform.Certification.Application.QueryServices;
@@ -16,6 +20,30 @@ namespace SumaqAgro.Platform.Certification.Interfaces.Rest;
 public sealed class HarvestBatchesController(ICertificationService commands, ICertificationQueryService repository,
     ProblemDetailsFactory problems) : ResultController(problems)
 {
+    [HttpGet]
+    public async Task<IActionResult> List([FromQuery, BindRequired] long cooperativeId, [FromQuery] long? memberId,
+        [FromServices] IIamAccounts accounts, [FromServices] IProfilesQueryService profiles, CancellationToken ct)
+    {
+        var email = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (string.IsNullOrWhiteSpace(email) || await accounts.FindAsync(email, ct) is not { } account)
+            return Unauthorized();
+
+        if (account.Role == "ROLE_COOPERATIVE_DIRECTOR")
+        {
+            var cooperative = await profiles.FindCooperativeAsync(cooperativeId, ct);
+            if (cooperative?.ManagerUserId != account.Id) return Forbid();
+        }
+        else if (account.Role != "ROLE_FARMER" || memberId is null ||
+                 !(await profiles.ListMembershipsAsync(account.Id, ct))
+                     .Any(member => member.Id == memberId && member.CooperativeId == cooperativeId))
+        {
+            return Forbid();
+        }
+
+        var batches = await repository.ListBatchesAsync(cooperativeId, memberId, ct);
+        return Ok(batches.Select(CertificationResourceAssembler.ToResource).ToArray());
+    }
+
     [HttpPost]
     [ProducesResponseType<HarvestBatchResource>(201)]
     public async Task<IActionResult> Register(RegisterBatch resource, CancellationToken ct) =>

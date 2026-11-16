@@ -1,6 +1,10 @@
 using SumaqAgro.Platform.Profiles.Interfaces.Rest.Transform;
 using SumaqAgro.Platform.Profiles.Domain.Model.Queries;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using SumaqAgro.Platform.Iam.Interfaces.Acl;
+using System.ComponentModel.DataAnnotations;
+using SumaqAgro.Platform.Shared.Interfaces.Rest.ProblemDetails;
 using SumaqAgro.Platform.Profiles.Application.CommandServices;
 using SumaqAgro.Platform.Profiles.Interfaces.Rest.Resources;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -12,16 +16,45 @@ namespace SumaqAgro.Platform.Profiles.Interfaces.Rest;
 
 [ApiController]
 [Route("api/v1/agronomist-assignments")]
-public sealed class AgronomistAssignmentsController(IProfilesCommandService commands, IProfilesQueryService queries)
+public sealed class AgronomistAssignmentsController(IProfilesCommandService commands, IProfilesQueryService queries, ProblemDetailsFactory problems, IIamAccounts accounts)
     : ControllerBase
 {
+    [HttpGet("{assignmentId:long}")]
+    public async Task<IActionResult> GetById(long assignmentId, CancellationToken ct)
+    {
+        var assignment = await queries.FindAssignmentAsync(assignmentId, ct);
+        return assignment is null ? NotFound() : new JsonResult(ProfilesResourceAssembler.ToResource(assignment));
+    }
+
+    [HttpPut("{assignmentId:long}")]
+    public async Task<IActionResult> Reassign(long assignmentId, ReassignAgronomistResource resource, CancellationToken ct)
+    {
+        var result = await commands.ReassignAsync(assignmentId, resource.AgronomistUserId, ct);
+        return result.Match<IActionResult>(assignment => new JsonResult(ProfilesResourceAssembler.ToResource(assignment)),
+            error => problems.CreateProblemDetails(HttpContext, error));
+    }
+
     [HttpPost]
     [ProducesResponseType<AgronomistAssignmentResource>(StatusCodes.Status201Created, "application/json")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Assign(AssignAgronomistResource resource, CancellationToken cancellationToken)
     {
         var assignment = await commands.AssignAsync(ProfilesResourceAssembler.ToCommand(resource), cancellationToken);
-        return assignment.IsFailure ? BadRequest() : new JsonResult(ProfilesResourceAssembler.ToResource(assignment.Value!)) { StatusCode = StatusCodes.Status201Created };
+        return assignment.IsFailure ? problems.CreateProblemDetails(HttpContext, assignment.DomainError) : new JsonResult(ProfilesResourceAssembler.ToResource(assignment.Value!)) { StatusCode = StatusCodes.Status201Created };
+    }
+
+    [HttpGet("me")]
+    [ProducesResponseType<AgronomistAssignmentResource[]>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMine(CancellationToken ct)
+    {
+        var email = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (string.IsNullOrWhiteSpace(email) || await accounts.FindAsync(email, ct) is not { } account)
+            return Unauthorized();
+        if (account.Role != "ROLE_AGRONOMIST")
+            return Forbid();
+
+        var assignments = await queries.ListActiveAssignmentsByAgronomistAsync(account.Id, ct);
+        return Ok(assignments.Select(ProfilesResourceAssembler.ToResource).ToArray());
     }
 
     [HttpGet("plot/{plotId:long}")]
@@ -39,3 +72,5 @@ public sealed class AgronomistAssignmentsController(IProfilesCommandService comm
         CancellationToken cancellationToken) =>
         new JsonResult((await queries.ListAssignmentsAsync(new GetAssignmentsByCooperativeQuery(cooperativeId), cancellationToken)).Select(ProfilesResourceAssembler.ToResource).ToArray());
 }
+
+public sealed record ReassignAgronomistResource([param: Range(1, long.MaxValue)] long AgronomistUserId);

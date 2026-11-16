@@ -16,8 +16,9 @@ public sealed class UserCommandService(IUserRepository users, IUnitOfWork unitOf
 {
     public async Task<Result<User>> RegisterAsync(RegisterUserCommand command, CancellationToken cancellationToken)
     {
-        var user = User.Register(new EmailAddress(command.Email).Value, hashing.Hash(command.Password),
-            command.Role, command.FirstName, command.LastName);
+        var user = new User(new EmailAddress(command.Email).Value, hashing.Hash(command.Password),
+            command.Role);
+        await using var transaction = await users.BeginRegistrationAsync(cancellationToken);
         await users.AddAsync(user, cancellationToken);
 
         try
@@ -30,6 +31,9 @@ public sealed class UserCommandService(IUserRepository users, IUnitOfWork unitOf
             return Result<User>.Failure(IamErrors.EmailAlreadyExists);
         }
 
+        user.RecordRegistration(command.FirstName, command.LastName);
+        await unitOfWork.CompleteAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return Result<User>.Success(user);
     }
 }

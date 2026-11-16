@@ -27,6 +27,9 @@ public sealed class CropRepository(AppDbContext context) : ICropRepository
         context.Set<TechnicalPrescription>().AsNoTracking().Where(prescription => prescription.PlotId == plotId)
             .OrderBy(prescription => prescription.Id).ToListAsync(ct);
 
+    public Task<SatelliteObservation?> FindImportedObservationAsync(string key, CancellationToken ct) =>
+        context.Set<SatelliteObservation>().AsNoTracking().SingleOrDefaultAsync(observation => observation.ImportKey == key, ct);
+
     public Task<List<SatelliteObservation>> ListObservationsAsync(long plotId, CancellationToken ct) =>
         context.Set<SatelliteObservation>().AsNoTracking().Where(observation => observation.PlotId == plotId)
             .OrderByDescending(observation => observation.CapturedAt).ThenByDescending(observation => observation.Id).ToListAsync(ct);

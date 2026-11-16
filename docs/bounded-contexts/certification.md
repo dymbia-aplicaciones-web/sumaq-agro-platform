@@ -21,6 +21,8 @@ The member must belong to the cooperative before registering a batch. Weigh and 
 | `POST` | `/api/v1/quality-certificates/{qualityCertificateId}/revocation` | Revoke a certificate |
 | `GET` | `/api/v1/public/traceability?number={number}&hash={hash}` | Verify public traceability |
 
+The authenticated PDF download is available at `GET /api/v1/quality-certificates/{qualityCertificateId}/document`. Its QR code opens public traceability with the persisted certificate number and SHA-256 hash. Set `Certification:PublicBaseUrl` to the public API origin when deploying. The default is `http://localhost:5192`. Windows uses Arial. Linux hosts need DejaVu Sans installed under `/usr/share/fonts/truetype/dejavu`.
+
 ## Persistence
 
 Entity Framework Core manages these MySQL tables: `harvest_batches`, `quality_certificates`.

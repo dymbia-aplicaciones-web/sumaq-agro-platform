@@ -10,11 +10,9 @@ public sealed class User(string email, string passwordHash, string role) : Aggre
     public string PasswordHash { get; private set; } = passwordHash;
     public string Role { get; private set; } = role;
 
-    public static User Register(string email, string passwordHash, string role, string firstName, string lastName)
-    {
-        var user = new User(email, passwordHash, role);
-        user.AddDomainEvent(new UserRegisteredEvent(user, firstName, lastName));
-        return user;
-    }
+    public void ChangePassword(string hash) => PasswordHash = hash;
+
+    public void RecordRegistration(string firstName, string lastName) =>
+        AddDomainEvent(new UserRegisteredEvent(Id, firstName, lastName));
 }
 

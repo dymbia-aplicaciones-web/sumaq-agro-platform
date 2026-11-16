@@ -2,10 +2,7 @@ using SumaqAgro.Platform.Subscriptions.Domain.Model.Commands;
 using SumaqAgro.Platform.Subscriptions.Domain.Model.ValueObjects;
 using SumaqAgro.Platform.Subscriptions.Domain.Model.Errors;
 using SumaqAgro.Platform.Subscriptions.Application.CommandServices;
-using Microsoft.EntityFrameworkCore;
-using MySql.Data.MySqlClient;
 using SumaqAgro.Platform.Shared.Application.Model;
-using SumaqAgro.Platform.Shared.Domain.Model.Errors;
 using SumaqAgro.Platform.Shared.Domain.Repositories;
 using SumaqAgro.Platform.Subscriptions.Domain.Model.Aggregates;
 using SumaqAgro.Platform.Subscriptions.Domain.Model.Entities;
@@ -31,8 +28,10 @@ public sealed class CheckoutService(ISubscriptionsRepository repository, IUnitOf
 
         var plan = await repository.FindPlanAsync(planCode, ct);
         if (plan is null) return Result<Payment>.Failure(SubscriptionErrors.PlanNotFound);
-        if (await repository.FindSubscriptionAsync(userId, ct) is not null)
-            return AlreadySubscribed();
+        await using var transaction = await repository.BeginAccountUpdateAsync(userId, ct);
+        var subscription = await repository.FindTrackedSubscriptionAsync(userId, ct);
+        if (subscription is not null && subscription.PlanCode != planCode)
+            return Result<Payment>.Failure(SubscriptionErrors.PlanMismatch);
 
         var now = time.GetUtcNow();
         var monthly = cycle == BillingCycle.MONTHLY;
@@ -41,19 +40,30 @@ public sealed class CheckoutService(ISubscriptionsRepository repository, IUnitOf
         if (outcome == "COMPLETED")
         {
             var start = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, BillingZone).DateTime);
-            payment.Subscription = new Subscription(userId, planCode, cycle.ToString(), start, start.AddMonths(monthly ? 1 : 12));
+            var months = monthly ? 1 : 12;
+            if (subscription is null)
+                subscription = new Subscription(userId, planCode, cycle.ToString(), start, start.AddMonths(months));
+            else
+                subscription.Renew(cycle.ToString(), start, months);
         }
 
+        payment.Subscription = subscription;
         repository.Add(payment);
-        try { await unitOfWork.CompleteAsync(ct); }
-        catch (DbUpdateException exception) when (exception.InnerException is MySqlException { Number: 1062 })
-        {
-            return AlreadySubscribed();
-        }
-
+        await unitOfWork.CompleteAsync(ct);
+        await transaction.CommitAsync(ct);
         return Result<Payment>.Success(payment);
     }
 
-    private static Result<Payment> AlreadySubscribed() =>
-        Result<Payment>.Failure(SubscriptionErrors.AlreadySubscribed);
+    public async Task<Result<Subscription>> CancelAsync(CancelSubscriptionCommand command, CancellationToken ct)
+    {
+        await using var transaction = await repository.BeginAccountUpdateAsync(command.UserId, ct);
+        var subscription = await repository.FindTrackedSubscriptionAsync(command.UserId, ct);
+        if (subscription is null)
+            return Result<Subscription>.Failure(SubscriptionErrors.SubscriptionNotFound);
+
+        subscription.CancelRenewal();
+        await unitOfWork.CompleteAsync(ct);
+        await transaction.CommitAsync(ct);
+        return Result<Subscription>.Success(subscription);
+    }
 }

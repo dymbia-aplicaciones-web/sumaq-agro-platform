@@ -13,6 +13,10 @@ public sealed class FieldPlot(long ownerUserId, string name, string region, deci
     public string? AgroMonitoringPolygonId { get; private set; }
     public GeoCoordinate[]? Boundary { get; private set; }
 
+    public SoilBaseline? SoilBaseline { get; private set; }
+
+    public void RecordSoilBaseline(SoilBaseline baseline) => SoilBaseline = baseline;
+
     public void Delineate(PlotBoundary boundary)
     {
         Boundary = boundary.Vertices;

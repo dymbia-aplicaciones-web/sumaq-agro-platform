@@ -27,3 +27,21 @@ Accept: application/json
 Content-Type: application/json
 
 { "planCode": "SEED", "billingCycle": "MONTHLY", "simulatedOutcome": "COMPLETED" }
+
+### Cancelar la renovación y conservar el período pagado
+POST {{host}}/api/v1/subscriptions/me/cancel
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+
+### Renovar el mismo plan con otro pago aprobado
+POST {{host}}/api/v1/subscriptions/me/checkout
+Authorization: Bearer {{iamToken}}
+Accept: application/json
+Content-Type: application/json
+
+{ "planCode": "SEED", "billingCycle": "MONTHLY", "simulatedOutcome": "COMPLETED" }
+
+### Consultar el historial de pagos del usuario autenticado
+GET {{host}}/api/v1/subscriptions/me/payments
+Authorization: Bearer {{iamToken}}
+Accept: application/json

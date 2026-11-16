@@ -1,3 +1,4 @@
+using SumaqAgro.Platform.Certification.Application.Internal.OutboundServices;
 using SumaqAgro.Platform.Certification.Domain.Model.Commands;
 using SumaqAgro.Platform.Certification.Domain.Model.Errors;
 using SumaqAgro.Platform.Certification.Application.CommandServices;
@@ -14,12 +15,12 @@ using SumaqAgro.Platform.Shared.Domain.Repositories;
 
 namespace SumaqAgro.Platform.Certification.Application.Internal.CommandServices;
 
-public sealed class CertificationService(ICertificationRepository repository, IUnitOfWork unitOfWork, TimeProvider time) : ICertificationService
+public sealed class CertificationService(ICertificationRepository repository, ICooperativeMembership membership, IUnitOfWork unitOfWork, TimeProvider time) : ICertificationService
 {
     public async Task<Result<HarvestBatch>> RegisterAsync(RegisterHarvestBatchCommand command, CancellationToken ct)
     {
         var (code, cooperativeId, memberId, plotId, cropType, harvestedOn) = command;
-        if (!await repository.MemberBelongsAsync(cooperativeId, memberId, ct))
+        if (!await membership.MemberBelongsAsync(cooperativeId, memberId, ct))
             return Result<HarvestBatch>.Failure(CertificationErrors.Rule("The member does not belong to the cooperative."));
 
         var batch = new HarvestBatch(code, cooperativeId, memberId, plotId, cropType, harvestedOn, time.GetUtcNow());

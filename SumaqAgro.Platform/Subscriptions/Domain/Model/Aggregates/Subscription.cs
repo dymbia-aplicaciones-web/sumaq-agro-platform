@@ -9,4 +9,22 @@ public sealed class Subscription(long userId, string planCode, string billingCyc
     public DateOnly StartDate { get; private set; } = startDate;
     public DateOnly EndDate { get; private set; } = endDate;
     public string Status { get; private set; } = "ACTIVE";
+
+    public void CancelRenewal() => Status = "CANCELLED";
+
+    public void Renew(string cycle, DateOnly approvedOn, int months)
+    {
+        if (approvedOn > EndDate)
+        {
+            StartDate = approvedOn;
+            EndDate = approvedOn.AddMonths(months);
+        }
+        else
+        {
+            EndDate = EndDate.AddMonths(months);
+        }
+
+        BillingCycle = cycle;
+        Status = "ACTIVE";
+    }
 }

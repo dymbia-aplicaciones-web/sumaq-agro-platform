@@ -9,4 +9,5 @@ public interface ISubscriptionsQueryService
     Task<List<Plan>> ListPlansAsync(GetPlansQuery query, CancellationToken ct);
 
     Task<Subscription?> FindSubscriptionAsync(GetSubscriptionByUserIdQuery query, CancellationToken ct);
+    Task<List<Payment>> ListPaymentsAsync(GetPaymentsByUserIdQuery query, CancellationToken ct);
 }

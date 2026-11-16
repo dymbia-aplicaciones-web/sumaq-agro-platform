@@ -30,4 +30,18 @@ public sealed record SpecifySeedVarietyResource([param: Required, StringLength(6
 public sealed record RecordSowingDateResource([param: Required] DateOnly? SowingDate);
 
 public sealed record FieldPlotResource(long Id, long OwnerUserId, string Name, string Region, string Status,
-    decimal AreaHectares, string? AgroMonitoringPolygonId, GeoCoordinate[] Boundary);
+    decimal AreaHectares, string? AgroMonitoringPolygonId, GeoCoordinate[] Boundary, SoilBaseline? SoilBaseline);
+
+public sealed record DelineatePlotPolygonResource([param: Required] CoordinateResource?[] Coordinates);
+
+public sealed record SoilBaselineResource(
+    [param: Required, Range(typeof(decimal), "0", "14")] decimal? Ph,
+    [param: Required, RegularExpression("(?i)^(SANDY|LOAMY|CLAY|SILTY|SANDY_LOAM|CLAY_LOAM)$")] string Texture,
+    [param: Required, Range(typeof(decimal), "0", "100")] decimal? OrganicMatterPercentage,
+    [param: Required] DateOnly? RecordedAt);
+
+public sealed record UpdateCropCampaignResource(
+    [param: RegularExpression(@"(?i)^\s*(ANDEAN_POTATO|SPECIALTY_COFFEE)\s*$")] string? CropType,
+    [param: StringLength(60, MinimumLength = 1)] string? SeedVariety,
+    bool? CustomSeedVariety,
+    DateOnly? SowingDate);

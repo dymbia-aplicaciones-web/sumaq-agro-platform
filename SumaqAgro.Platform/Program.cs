@@ -1,5 +1,21 @@
+using SumaqAgro.Platform.Iam.Interfaces.Acl;
+using SumaqAgro.Platform.Iam.Application.Acl;
+using SumaqAgro.Platform.Iam.Infrastructure.Acl;
+using SumaqAgro.Platform.Subscriptions.Application.Internal.OutboundServices;
+using SumaqAgro.Platform.Subscriptions.Infrastructure.Acl;
+using SumaqAgro.Platform.Certification.Application.Internal.OutboundServices;
+using SumaqAgro.Platform.Certification.Infrastructure.Acl;
+using SumaqAgro.Platform.Farming.Application.Acl;
+using SumaqAgro.Platform.Farming.Interfaces.Acl;
+using SumaqAgro.Platform.Profiles.Application.Internal.OutboundServices;
+using SumaqAgro.Platform.Profiles.Infrastructure.Acl;
+using SumaqAgro.Platform.Subscriptions.Application.Acl;
+using SumaqAgro.Platform.Subscriptions.Interfaces.Acl;
+using SumaqAgro.Platform.Iam.Infrastructure.Email;
 using SumaqAgro.Platform.Farming.Domain.Repositories;
 using Cortex.Mediator.Commands;
+using SumaqAgro.Platform.Crop.Application.Internal.OutboundServices;
+using SumaqAgro.Platform.Crop.Infrastructure.Acl;
 using SumaqAgro.Platform.Shared.Infrastructure.Interfaces.AspNetCore.Configuration;
 using SumaqAgro.Platform.Shared.Infrastructure.Interfaces.AspNetCore.OpenApi;
 using SumaqAgro.Platform.Shared.Infrastructure.Mediator.Cortex.Configuration;
@@ -32,7 +48,7 @@ using SumaqAgro.Platform.Crop.Application.Internal.CommandServices;
 using SumaqAgro.Platform.Crop.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using SumaqAgro.Platform.Farming.Application.Internal.CommandServices;
 using SumaqAgro.Platform.Farming.Application.Internal.OutboundServices;
-using SumaqAgro.Platform.Farming.Infrastructure.AgroMonitoring;
+using SumaqAgro.Platform.Farming.Infrastructure.Acl;
 using SumaqAgro.Platform.Farming.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using SumaqAgro.Platform.Profiles.Application.Acl;
 using SumaqAgro.Platform.Profiles.Application.Internal.CommandServices;
@@ -40,6 +56,7 @@ using SumaqAgro.Platform.Profiles.Application.Internal.QueryServices;
 using SumaqAgro.Platform.Profiles.Domain.Repositories;
 using SumaqAgro.Platform.Profiles.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using SumaqAgro.Platform.Profiles.Interfaces.Acl;
+using SumaqAgro.Platform.Certification.Infrastructure.Documents;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -86,6 +103,15 @@ builder.Services.AddDbContext<AppDbContext>((services, options) =>
 });
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IIamAccounts, IamAccounts>();
+builder.Services.AddScoped<IInitialProfiles, InitialProfiles>();
+builder.Services.AddScoped<ISubscriptionAccounts, SubscriptionAccounts>();
+builder.Services.AddScoped<ICropAccounts, CropAccounts>();
+builder.Services.AddScoped<ICooperativeMembership, CooperativeMembership>();
+builder.Services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
+builder.Services.AddScoped<IPasswordRecoveryService, PasswordRecoveryService>();
+builder.Services.AddHttpClient<IPasswordResetEmail, BrevoPasswordResetEmail>(client =>
+    client.Timeout = TimeSpan.FromSeconds(10)).RemoveAllLoggers();
 builder.Services.AddSingleton<IHashingService, BCryptHashingService>();
 builder.Services.AddScoped<IUserCommandService, UserCommandService>();
 builder.Services.AddScoped<ISignInService, SignInService>();
@@ -96,11 +122,22 @@ builder.Services.AddScoped<IProfilesQueryService, ProfilesQueryService>();
 builder.Services.AddScoped<IFarmingRepository, FarmingRepository>();
 builder.Services.AddScoped<IFarmingCommandService, FarmingCommandService>();
 builder.Services.AddScoped<ICropRepository, CropRepository>();
+builder.Services.AddScoped<ISatelliteObservationCommandService, SatelliteObservationCommandService>();
+builder.Services.AddHttpClient<ISatelliteImagery, AgroMonitoringSatelliteImagery>(client =>
+{
+    var baseUrl = builder.Configuration["AgroMonitoring:BaseUrl"] ?? "https://api.agromonitoring.com/agro/1.0/";
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(15);
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+    .RemoveAllLoggers();
 builder.Services.AddScoped<ICropCommandService, CropCommandService>();
 builder.Services.AddScoped<ICropMonitoringService, CropMonitoringService>();
 builder.Services.AddScoped<ICertificationRepository, CertificationRepository>();
 builder.Services.AddScoped<ICertificationService, CertificationService>();
+builder.Services.AddSingleton<CertificatePdf>();
 builder.Services.AddScoped<ISubscriptionsRepository, SubscriptionsRepository>();
+builder.Services.AddScoped<IAdvisorSubscriptionFacade, AdvisorSubscriptionFacade>();
+builder.Services.AddScoped<IAdvisorPlotQuota, AdvisorPlotQuota>();
 builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHttpClient<IPolygonMonitoring, PolygonMonitoring>(client =>
@@ -139,6 +176,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IFarmingQueryService, FarmingQueryService>();
+builder.Services.AddScoped<IFieldPlotFacade, FieldPlotFacade>();
+builder.Services.AddScoped<IMonitoringPlots, FarmingMonitoringPlots>();
+builder.Services.AddScoped<ITraceabilityPlots, FarmingTraceabilityPlots>();
 
 builder.Services.AddScoped<ICropQueryService, CropQueryService>();
 
@@ -147,12 +187,17 @@ builder.Services.AddScoped<ITraceabilityQueryService, TraceabilityQueryService>(
 
 builder.Services.AddScoped<ISubscriptionsQueryService, SubscriptionsQueryService>();
 
+var frontendOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+if (frontendOrigins.Length > 0)
+    builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+        policy.WithOrigins(frontendOrigins).AllowAnyHeader().AllowAnyMethod()));
+
 var app = builder.Build();
 
 app.UseGlobalExceptionHandler();
 app.UseRequestLocalization(new RequestLocalizationOptions().SetDefaultCulture("en").AddSupportedCultures("en", "es").AddSupportedUICultures("en", "es"));
 
-if (app.Environment.IsDevelopment() &&
+if ((app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:ApplyMigrations")) &&
     !string.IsNullOrWhiteSpace(app.Configuration.GetConnectionString("DefaultConnection")))
 {
     await using var scope = app.Services.CreateAsyncScope();
@@ -166,6 +211,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference().AllowAnonymous();
 }
 
+if (frontendOrigins.Length > 0) app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers().RequireAuthorization();

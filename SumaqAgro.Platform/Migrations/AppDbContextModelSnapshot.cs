@@ -410,6 +410,11 @@ namespace SumaqAgro.Platform.Migrations
                         .HasColumnType("double")
                         .HasColumnName("cloud_coverage_percent");
 
+                    b.Property<string>("ImportKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("import_key");
+
                     b.Property<double?>("NdviMean")
                         .HasColumnType("double")
                         .HasColumnName("ndvi_mean");
@@ -433,6 +438,10 @@ namespace SumaqAgro.Platform.Migrations
 
                     b.HasKey("Id")
                         .HasName("p_k_satellite_observations");
+
+                    b.HasIndex("ImportKey")
+                        .IsUnique()
+                        .HasDatabaseName("i_x_satellite_observations_import_key");
 
                     b.HasIndex("PlotId", "CapturedAt")
                         .HasDatabaseName("i_x_satellite_observations_plot_id_captured_at");
@@ -500,6 +509,28 @@ namespace SumaqAgro.Platform.Migrations
                         .HasDatabaseName("i_x_technical_prescriptions_plot_id");
 
                     b.ToTable("technical_prescriptions");
+                });
+
+            modelBuilder.Entity("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CampaignLedger", b =>
+                {
+                    b.Property<long>("CampaignId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("campaign_id");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("json")
+                        .HasColumnName("payload");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("version");
+
+                    b.HasKey("CampaignId")
+                        .HasName("p_k_campaign_ledgers");
+
+                    b.ToTable("campaign_ledgers", (string)null);
                 });
 
             modelBuilder.Entity("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CropCampaign", b =>
@@ -614,6 +645,35 @@ namespace SumaqAgro.Platform.Migrations
                     b.ToTable("field_plots");
                 });
 
+            modelBuilder.Entity("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.PasswordResetToken", b =>
+                {
+                    b.Property<string>("Digest")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("digest");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("expires_at");
+
+                    b.Property<bool>("Used")
+                        .IsConcurrencyToken()
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("used");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Digest")
+                        .HasName("p_k_password_reset_tokens");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("i_x_password_reset_tokens_user_id");
+
+                    b.ToTable("password_reset_tokens", (string)null);
+                });
+
             modelBuilder.Entity("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.User", b =>
                 {
                     b.Property<long>("Id")
@@ -667,6 +727,7 @@ namespace SumaqAgro.Platform.Migrations
                         .HasComputedColumnSql("CASE WHEN active THEN plot_id ELSE NULL END", true);
 
                     b.Property<long>("AgronomistUserId")
+                        .IsConcurrencyToken()
                         .HasColumnType("bigint")
                         .HasColumnName("agronomist_user_id");
 
@@ -857,8 +918,15 @@ namespace SumaqAgro.Platform.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("last_name");
 
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
                     b.HasKey("Id")
                         .HasName("p_k_cooperative_members");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("i_x_cooperative_members_user_id");
 
                     b.HasIndex("CooperativeId", "Dni")
                         .IsUnique()
@@ -926,7 +994,7 @@ namespace SumaqAgro.Platform.Migrations
                         .HasColumnName("amount");
 
                     b.Property<DateTimeOffset>("AttemptedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("datetime(6)")
                         .HasColumnName("attempted_at");
 
                     b.Property<string>("BillingCycle")
@@ -1039,6 +1107,16 @@ namespace SumaqAgro.Platform.Migrations
                         .HasConstraintName("f_k_quality_certificates_harvest_batches_harvest_batch_id");
                 });
 
+            modelBuilder.Entity("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CampaignLedger", b =>
+                {
+                    b.HasOne("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CropCampaign", null)
+                        .WithOne()
+                        .HasForeignKey("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CampaignLedger", "CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("f_k_campaign_ledgers__crop_campaign_campaign_id");
+                });
+
             modelBuilder.Entity("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.CropCampaign", b =>
                 {
                     b.HasOne("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.FieldPlot", null)
@@ -1049,16 +1127,106 @@ namespace SumaqAgro.Platform.Migrations
                         .HasConstraintName("f_k_crop_campaigns__field_plot_field_plot_id");
                 });
 
+            modelBuilder.Entity("SumaqAgro.Platform.Farming.Domain.Model.Aggregates.FieldPlot", b =>
+                {
+                    b.OwnsOne("SumaqAgro.Platform.Farming.Domain.Model.ValueObjects.SoilBaseline", "SoilBaseline", b1 =>
+                        {
+                            b1.Property<long>("FieldPlotId")
+                                .HasColumnType("bigint")
+                                .HasColumnName("id");
+
+                            b1.Property<decimal>("OrganicMatterPercentage")
+                                .HasPrecision(5, 2)
+                                .HasColumnType("decimal(5,2)")
+                                .HasColumnName("organic_matter_percentage");
+
+                            b1.Property<decimal>("Ph")
+                                .HasPrecision(4, 2)
+                                .HasColumnType("decimal(4,2)")
+                                .HasColumnName("ph");
+
+                            b1.Property<DateTime>("RecordedAt")
+                                .HasColumnType("date")
+                                .HasColumnName("recorded_at");
+
+                            b1.Property<string>("Texture")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("varchar(16)")
+                                .HasColumnName("texture");
+
+                            b1.HasKey("FieldPlotId")
+                                .HasName("p_k_field_plots");
+
+                            b1.ToTable("field_plots");
+
+                            b1.WithOwner()
+                                .HasForeignKey("FieldPlotId")
+                                .HasConstraintName("f_k_field_plots_field_plots_id");
+                        });
+
+                    b.Navigation("SoilBaseline");
+                });
+
+            modelBuilder.Entity("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.PasswordResetToken", b =>
+                {
+                    b.HasOne("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("f_k_password_reset_tokens_users_user_id");
+                });
+
+            modelBuilder.Entity("SumaqAgro.Platform.Profiles.Domain.Model.Aggregates.AgronomistAssignment", b =>
+                {
+                    b.OwnsMany("SumaqAgro.Platform.Profiles.Domain.Model.Aggregates.AssignmentHistoryEntry", "History", b1 =>
+                        {
+                            b1.Property<long>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bigint")
+                                .HasColumnName("id");
+
+                            b1.Property<long>("AgronomistUserId")
+                                .HasColumnType("bigint")
+                                .HasColumnName("agronomist_user_id");
+
+                            b1.Property<DateTime>("AssignedAt")
+                                .HasColumnType("datetime(6)")
+                                .HasColumnName("assigned_at");
+
+                            b1.Property<long>("AssignmentId")
+                                .HasColumnType("bigint")
+                                .HasColumnName("assignment_id");
+
+                            b1.Property<DateTime>("EndedAt")
+                                .HasColumnType("datetime(6)")
+                                .HasColumnName("ended_at");
+
+                            b1.HasKey("Id")
+                                .HasName("p_k_assignment_histories");
+
+                            b1.HasIndex("AssignmentId")
+                                .HasDatabaseName("i_x_assignment_histories_assignment_id");
+
+                            b1.ToTable("assignment_histories", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("AssignmentId")
+                                .HasConstraintName("f_k_assignment_histories_agronomist_assignments_assignment_id");
+                        });
+
+                    b.Navigation("History");
+                });
+
             modelBuilder.Entity("SumaqAgro.Platform.Profiles.Domain.Model.Aggregates.Profile", b =>
                 {
-                    b.HasOne("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.User", "User")
+                    b.HasOne("SumaqAgro.Platform.Iam.Domain.Model.Aggregates.User", null)
                         .WithOne()
                         .HasForeignKey("SumaqAgro.Platform.Profiles.Domain.Model.Aggregates.Profile", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("f_k_profiles_users_user_id");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SumaqAgro.Platform.Profiles.Domain.Model.Entities.AgronomistInvitation", b =>

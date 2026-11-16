@@ -89,3 +89,8 @@ Accept: application/json
 Content-Type: application/json
 
 { "aroma": 8, "flavor": 8, "acidity": 8, "body": 8, "totalScore": 85, "fermentDefect": false }
+
+### Descargar el certificado PDF con QR
+GET {{host}}/api/v1/quality-certificates/{{certificateId}}/document
+Authorization: Bearer {{iamToken}}
+Accept: application/pdf

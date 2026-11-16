@@ -7,6 +7,12 @@ namespace SumaqAgro.Platform.Certification.Application.Internal.QueryServices;
 
 public sealed class CertificationQueryService(ICertificationRepository repository) : ICertificationQueryService
 {
+    public Task<IReadOnlyList<HarvestBatch>> ListBatchesAsync(long cooperativeId, long? memberId, CancellationToken ct) =>
+        repository.ListBatchesAsync(cooperativeId, memberId, ct);
+
+    public Task<QualityCertificate?> FindCertificateByBatchAsync(long batchId, CancellationToken ct) =>
+        repository.FindCertificateByBatchAsync(batchId, ct);
+
     public Task<HarvestBatch?> FindBatchAsync(GetHarvestBatchByIdQuery query, CancellationToken ct) =>
         repository.FindBatchAsync(query.Id, ct);
 
